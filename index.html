@@ -576,7 +576,10 @@ function startLearn(){
 }
 function nextLearnCard(){
   const item = learnQueue.shift();
-  if(!item){ $('#learnArea').innerHTML='<div class="center ok">Nice! No more due cards.</div>'; return; }
+  if(!item){
+    $('#learnArea').innerHTML='<div class="center ok">Nice! No more due cards.</div>';
+    return;
+  }
   renderItem('#learnArea', item, (correct,quality=correct?5:2)=>{
     recordResult(item, correct);
     sm2(item, quality);
@@ -584,112 +587,33 @@ function nextLearnCard(){
   }, false, {mode:'learn'});
 }
 
-/********
- * Quiz *
- ********/
-let quizDeck = [], quizCorrect=0, quizTotal=0;
-function startQuiz(){
-  const filter = $('#quizDomain').value; const count = parseInt($('#quizCount').value,10);
-  const pool = shuffle(ITEMS.filter(i=> filter==='all' || `${i.core} · ${i.domain}`===filter));
-  quizDeck = pool.slice(0, count); quizCorrect=0; quizTotal=count; renderQuizNext();
-}
-function renderQuizNext(){
-  const item = quizDeck.shift();
-  if(!item){
-    $('#quizArea').innerHTML = `<div class="center"><div>Score: <strong>${quizCorrect}/${quizTotal}</strong></div><div class="controls" style="margin-top:10px"><button class="btn" onclick="startQuiz()">Play again</button></div></div>`;
-    return;
+/* ============================
+   WHY examples for Learn mode
+   ============================ */
+const WHY_BY_DOMAIN = {
+  'Networking': 'Example: choosing the wrong port or protocol can block apps—e.g., opening 80 instead of 443 breaks secure sites.',
+  'Hardware': 'Example: an underpowered PSU can cause random reboots when the GPU is under load.',
+  'Operating Systems': 'Example: using Services.msc to restart a stuck service avoids rebooting a production PC.',
+  'Security': 'Example: weak Wi-Fi security (WEP, short passphrases) lets attackers join your network quickly.',
+  'Software Troubleshooting': 'Example: rolling back a faulty driver can instantly resolve a new BSOD.',
+  'Operational Procedures': 'Example: change control prevents unplanned outages during business hours.',
+  'Virtualization & Cloud': 'Example: picking IaaS when you need OS control avoids PaaS/runtime lock-in.',
+  'Hardware/Network Troubleshooting': 'Example: following the CompTIA methodology avoids replacing good parts and wasting budget.',
+  'Mobile Devices': 'Example: correct sync/MDM settings prevent data loss and protect corporate email.'
+};
+const WHY_BY_TAG = {
+  ports: 'Example: opening the wrong port on a firewall leaves the service unreachable (e.g., RDP uses 3389).',
+  wifi: 'Example: picking channels 1/6/11 on 2.4 GHz minimizes interference and keeps throughput stable.',
+  raid: 'Example: RAID 5 parity tolerates one disk failure; a misconfig can cause data loss and downtime.',
+  psu: 'Example: an undersized PSU leads to crashes under load.',
+  printer: 'Example: understanding fuser/drum helps diagnose streaks and ghosting fast.'
+};
+function whyFor(item){
+  if(item.why) return item.why;
+  if(item.tags && item.tags.length){
+    for(const t of item.tags){ if(WHY_BY_TAG[t]) return WHY_BY_TAG[t]; }
   }
-  renderItem('#quizArea', item, (correct)=>{
-    recordResult(item, correct);
-    if(correct){ quizCorrect++; addXP(10); incStreak(); } else { addXP(-3); resetStreak(); }
-    renderQuizNext();
-  });
-}
-
-/*********
- * Match *
- *********/
-function startMatch(){
-  const id = $('#matchSet').value; const set = MATCH_SETS.find(m=>m.id===id);
-  if(!set){ $('#matchArea').innerHTML = '<div class="center muted">No set.</div>'; return; }
-  const L = set.pairs.map(p=>p[0]); const R = shuffle(set.pairs.map(p=>p[1]));
-  const used = new Set(); let correct=0, total=set.pairs.length; const t0 = performance.now();
-  const host = $('#matchArea'); host.innerHTML = '';
-  const left = document.createElement('div'); const right = document.createElement('div'); left.className='col'; right.className='col'; left.style.gap='8px'; right.style.gap='8px';
-  L.forEach((txt)=>{ const d=document.createElement('div'); d.className='dr'; d.textContent=txt; d.draggable=true; d.dataset.key=txt; left.appendChild(d); });
-  R.forEach((txt)=>{ const drop=document.createElement('div'); drop.className='drop'; drop.dataset.accept=txt; drop.textContent = txt + '  ⟵ drop here'; right.appendChild(drop); });
-  const grid=document.createElement('div'); grid.className='pairs'; grid.append(left,right); host.appendChild(grid);
-  host.appendChild(document.createElement('hr'));
-  const status=document.createElement('div'); status.className='small muted'; host.appendChild(status);
-
-  host.addEventListener('dragstart', e=>{ if(e.target.classList.contains('dr')){ e.dataTransfer.setData('text/plain', e.target.dataset.key); }});
-  host.addEventListener('dragover', e=>{ if(e.target.classList.contains('drop')) e.preventDefault(); });
-  host.addEventListener('drop', e=>{
-    if(!e.target.classList.contains('drop')) return;
-    e.preventDefault();
-    const key = e.dataTransfer.getData('text/plain'); const want = e.target.dataset.accept;
-    if(used.has(key)) return;
-    const ok = set.pairs.some(p=>p[0]===key && p[1]===want);
-    if(ok){
-      e.target.style.borderColor='#1fbf8f'; e.target.style.background='#0f1f20'; e.target.textContent = key + ' ✓ ' + want;
-      used.add(key); correct++; addXP(5); incStreak();
-    } else {
-      e.target.style.borderColor='#d34b4b'; addXP(-2); resetStreak();
-    }
-    status.textContent = `${correct}/${total} matched`;
-    if(correct===total){
-      const secs = Math.round((performance.now()-t0)/1000); toast(`Completed in ${secs}s`);
-      if(set.name.includes('Ports') && secs<=60 && (correct/total)>=0.9){ state.ach.ports50=true; save(); }
-    }
-  });
-}
-
-/***************
- * Boss Battles *
- ***************/
-function startBoss(){
-  const filter = $('#bossDomain').value; const pool = shuffle(ITEMS.filter(i=> filter==='all' || `${i.core} · ${i.domain}`===filter));
-  const deck = pool.slice(0,10); let correct=0; let idx=0; let time=60; const host = $('#bossArea');
-  function tick(){ if(--time<=0){ end(); } timer.textContent = time+'s'; }
-  function end(){
-    clearInterval(t);
-    const pct = Math.round((correct/10)*100); const win = pct>=80;
-    if(win) { addXP(50); state.bossWins++; if(filter.includes('1202') && correct===10){ state.ach.osPerfect=true; } }
-    save();
-    host.innerHTML = `<div class='center'><div>Score: <strong>${pct}%</strong> ${win?"<span class='ok'>(WIN)</span>":"<span class='bad'>(LOSE)</span>"}</div><div class='controls' style='margin-top:10px'><button class='btn' onclick='startBoss()'>Rematch</button></div></div>`;
-  }
-  host.innerHTML = '';
-  const header=document.createElement('div'); header.className='row'; const timer=document.createElement('div'); timer.className='timer pill'; timer.textContent='60s'; header.appendChild(timer); host.appendChild(header);
-  const t=setInterval(tick,1000);
-  function next(){
-    const item = deck[idx++]; if(!item){ end(); return; }
-    renderItem('#bossArea', item, (ok)=>{ recordResult(item, ok); if(ok){ correct++; addXP(8); incStreak(); } else { addXP(-3); resetStreak(); } next(); }, true);
-  }
-  next();
-}
-
-/*******************
- * Exam Simulator   *
- *******************/
-function startExam(){
-  const host = $('#examArea'); const minutes = 90; let time = minutes*60; const pool = shuffle(ITEMS).slice(0, Math.min(90, ITEMS.length)); let correct=0, idx=0;
-  if(pool.length<50){ host.innerHTML = '<div class="notice">This starter pack has fewer than 50 questions. Import a larger pack for a true 90-question sim.</div>'; }
-  function tick(){ time--; if(time<=0){ finish(); } timer.textContent = Math.floor(time/60)+":"+String(time%60).padStart(2,'0'); }
-  function finish(){
-    clearInterval(t);
-    const pct = Math.round((correct/pool.length)*100);
-    const pass = pct >= 75;
-    host.innerHTML = `<div class='center'><div>Exam Complete — Score: <strong>${pct}%</strong> ${pass?"<span class='ok'>(PASS)</span>":"<span class='bad'>(FAIL)</span>"}</div><div class='small muted'>Approximation: real A+ scores are on a 100–900 scale (C1 pass 675, C2 pass 700).</div><div class='controls' style='margin-top:10px'><button class='btn' onclick='startExam()'>Retry</button></div></div>`;
-    if(pass){ state.ach.examPass=true; addXP(200); save(); }
-  }
-  host.innerHTML = '';
-  const header=document.createElement('div'); header.className='row'; const timer=document.createElement('div'); timer.className='timer pill'; header.append('Time ', timer); host.appendChild(header);
-  const t=setInterval(tick,1000);
-  function next(){
-    const item = pool[idx++]; if(!item){ finish(); return; }
-    renderItem('#examArea', item, (ok)=>{ recordResult(item, ok); if(ok){ correct++; addXP(5);} else { addXP(-1);} next(); });
-  }
-  next();
+  return WHY_BY_DOMAIN[item.domain] || 'On the job, this prevents outages, speeds troubleshooting, and improves security.';
 }
 
 /********************
@@ -697,9 +621,18 @@ function startExam(){
  ********************/
 function renderItem(selector, item, onDone, compact=false, opts={}){
   const host = $(selector); if(!host) return; host.innerHTML = '';
+
   const card=document.createElement('div'); card.className='inset';
-  const meta = `<div class='row small muted'><span class='pill'>${item.core}</span><span class='pill'>${item.domain}</span><span class='spacer'></span><span class='pill'>${item.type.toUpperCase()}</span></div>`;
-  const q = document.createElement('div'); q.className='question'; q.innerHTML = meta + `<div style='margin-top:6px;'>${item.prompt}</div>`; card.appendChild(q);
+  const meta = `<div class='row small muted'>
+    <span class='pill'>${item.core}</span>
+    <span class='pill'>${item.domain}</span>
+    <span class='spacer'></span>
+    <span class='pill'>${(item.type||'mc').toUpperCase()}</span>
+  </div>`;
+  const q = document.createElement('div'); q.className='question';
+  q.innerHTML = meta + `<div style='margin-top:6px;'>${item.prompt}</div>`;
+  card.appendChild(q);
+
   const answerDiv = document.createElement('div'); answerDiv.className='answer hidden';
   let answered=false;
 
@@ -710,6 +643,9 @@ function renderItem(selector, item, onDone, compact=false, opts={}){
       const html = `<div class="verdict ${correct?'ok':'bad'}">${correct?'✅ Correct!':'❌ Incorrect'}</div>` +
                    (!correct ? `<div style='margin-top:8px;'><strong>Why it matters:</strong> ${why}${explain?'<br>'+explain:''}</div>` : '');
       answerDiv.innerHTML = html;
+    } else {
+      // Non-learn modes just show explanation if any
+      if(item.explain) answerDiv.innerHTML = `<div>${item.explain}</div>`;
     }
   }
 
@@ -717,53 +653,56 @@ function renderItem(selector, item, onDone, compact=false, opts={}){
 
   if(item.type==='mc' || item.type==='multi'){
     const choices = document.createElement('div'); choices.className='choices';
-    item.choices.forEach((c,idx)=>{
-      const btn=document.createElement('button'); btn.className='choice'; btn.textContent=c; btn.onclick=()=>{
+    (item.choices||[]).forEach((c,idx)=>{
+      const btn=document.createElement('button'); btn.className='choice'; btn.textContent=c;
+      btn.onclick=()=>{
         state.seen[item.id]=(state.seen[item.id]||0)+1;
         if(item.type==='mc'){
-          const correctIndex = item.answer[0];
+          const correctIndex = (item.answer||[0])[0];
           $$('.choice').forEach((o,i)=>{ o.disabled=true; if(i===correctIndex) o.classList.add('correct'); });
           if(idx!==correctIndex) btn.classList.add('wrong');
-          if(opts.mode==='learn'){ verdictBlock(idx===correctIndex); }
-          else { answerDiv.innerHTML = `<div>${item.explain||''}</div>`; }
+          verdictBlock(idx===correctIndex);
           card.appendChild(answerDiv); finish(idx===correctIndex);
         } else {
-          // multi-select: toggle pick; submit later
-          btn.classList.toggle('picked'); btn.style.borderColor = btn.classList.contains('picked')?'#7da3ff':'#2a2f58';
+          // multi-select toggle, submit later
+          btn.classList.toggle('picked');
+          btn.style.borderColor = btn.classList.contains('picked')?'#7da3ff':'#2a2f58';
         }
       };
       choices.appendChild(btn);
     });
     card.appendChild(choices);
+
     if(item.type==='multi'){
       const submit = document.createElement('button'); submit.className='btn'; submit.textContent='Submit'; submit.style.marginTop='10px';
       submit.onclick=()=>{
         const picks = $$('.choice.picked').map((b)=> Array.from(b.parentNode.children).indexOf(b));
-        const correct = picks.length && picks.length===item.answer.length && picks.every(i=> item.answer.includes(i));
-        $$('.choice').forEach((o,i)=>{ if(item.answer.includes(i)) o.classList.add('correct'); if(picks.includes(i) && !item.answer.includes(i)) o.classList.add('wrong'); o.disabled=true; });
-        if(opts.mode==='learn'){ verdictBlock(correct); }
-        else { answerDiv.innerHTML = `<div>${item.explain||''}</div>`; }
-        card.appendChild(answerDiv); finish(correct);
+        const correct = picks.length && picks.length===(item.answer||[]).length && picks.every(i=> (item.answer||[]).includes(i));
+        $$('.choice').forEach((o,i)=>{ if((item.answer||[]).includes(i)) o.classList.add('correct'); if(picks.includes(i) && !(item.answer||[]).includes(i)) o.classList.add('wrong'); o.disabled=true; });
+        verdictBlock(correct); card.appendChild(answerDiv); finish(correct);
       };
       card.appendChild(submit);
     }
-  }
-  else if(item.type==='type'){
-    const inp=document.createElement('input'); inp.type='text'; inp.placeholder='Type your answer'; inp.style.width='100%'; inp.style.padding='10px'; inp.style.borderRadius='10px'; inp.style.border='1px solid #2a2f58'; inp.style.background='#0f152f'; inp.style.color='var(--text)';
+  } else if(item.type==='type'){
+    const inp=document.createElement('input'); inp.type='text'; inp.placeholder='Type your answer';
+    inp.style.width='100%'; inp.style.padding='10px'; inp.style.borderRadius='10px';
+    inp.style.border='1px solid #2a2f58'; inp.style.background='#0f152f'; inp.style.color='var(--text)';
     const submit=document.createElement('button'); submit.className='btn'; submit.textContent='Check'; submit.style.marginTop='10px';
     submit.onclick=()=>{
       state.seen[item.id]=(state.seen[item.id]||0)+1;
-      const v=inp.value.trim().toLowerCase();
+      const v=(inp.value||'').trim().toLowerCase();
       const ok = (item.answer||[]).some(a=> String(a).toLowerCase()===v);
       if(opts.mode==='learn'){
         const answers = `<div class='small muted'>Answer(s): <strong>${(item.answer||[]).join(', ')}</strong></div>`;
         const why = !ok ? whyFor(item) : '';
         const explain = (!ok && item.explain) ? `<div class='small' style='margin-top:6px;'>${item.explain}</div>` : '';
-        answerDiv.innerHTML = `<div class="verdict ${ok?'ok':'bad'}">${ok?'✅ Correct!':'❌ Incorrect'}</div>` + (ok ? answers : `<div style='margin-top:8px;'><strong>Why it matters:</strong> ${why}${explain?'<br>'+explain:''}</div>` + answers);
+        answerDiv.innerHTML = `<div class="verdict ${ok?'ok':'bad'}">${ok?'✅ Correct!':'❌ Incorrect'}</div>` +
+                              (ok ? answers : `<div style='margin-top:8px;'><strong>Why it matters:</strong> ${why}${explain?'<br>'+explain:''}</div>` + answers);
       } else {
         answerDiv.innerHTML = `<div>Answer(s): <strong>${(item.answer||[]).join(', ')}</strong>${item.explain?'<br>'+item.explain:''}</div>`;
       }
-      inp.style.borderColor = ok?'#1fbf8f':'#d34b4b'; card.appendChild(answerDiv); finish(ok, ok?5:2);
+      inp.style.borderColor = ok?'#1fbf8f':'#d34b4b';
+      card.appendChild(answerDiv); finish(ok, ok?5:2);
     };
     card.append(inp); card.append(submit);
   }
@@ -771,7 +710,9 @@ function renderItem(selector, item, onDone, compact=false, opts={}){
 }
 
 function recordResult(item, correct){
-  state.seen[item.id]=(state.seen[item.id]||0)+1; if(correct) state.correct[item.id]=(state.correct[item.id]||0)+1; save();
+  state.seen[item.id]=(state.seen[item.id]||0)+1;
+  if(correct) state.correct[item.id]=(state.correct[item.id]||0)+1;
+  save();
 }
 
 /*******************
@@ -796,16 +737,14 @@ $('#fileIn').addEventListener('change', async (e)=>{
 function updateProfile(){ $('#pLevel').textContent = state.level; $('#pXP').textContent = state.xp; $('#pStreak').textContent = state.streak; $('#pBossWins').textContent = state.bossWins; }
 function updateHeader(){ $('#lvl').textContent=state.level; $('#xp').textContent=state.xp; $('#streak').textContent=state.streak; }
 
-/**************
- * Initialize  *
- **************/
+/**********************
+ * Re-wire tab clicks *
+ **********************/
 function init(){
-  // Mode tab click handlers
   $$('.mode-tab').forEach(btn=>btn.addEventListener('click', ()=>gotoMode(btn.dataset.mode)));
   fillDomains(); renderObjectives(); renderAchievements(); updateHeader();
 }
 init();
-
 </script>
 </body>
 </html>
