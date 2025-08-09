@@ -587,35 +587,6 @@ function nextLearnCard(){
   }, false, {mode:'learn'});
 }
 
-/* ============================
-   WHY examples for Learn mode
-   ============================ */
-const WHY_BY_DOMAIN = {
-  'Networking': 'Example: choosing the wrong port or protocol can block apps—e.g., opening 80 instead of 443 breaks secure sites.',
-  'Hardware': 'Example: an underpowered PSU can cause random reboots when the GPU is under load.',
-  'Operating Systems': 'Example: using Services.msc to restart a stuck service avoids rebooting a production PC.',
-  'Security': 'Example: weak Wi-Fi security (WEP, short passphrases) lets attackers join your network quickly.',
-  'Software Troubleshooting': 'Example: rolling back a faulty driver can instantly resolve a new BSOD.',
-  'Operational Procedures': 'Example: change control prevents unplanned outages during business hours.',
-  'Virtualization & Cloud': 'Example: picking IaaS when you need OS control avoids PaaS/runtime lock-in.',
-  'Hardware/Network Troubleshooting': 'Example: following the CompTIA methodology avoids replacing good parts and wasting budget.',
-  'Mobile Devices': 'Example: correct sync/MDM settings prevent data loss and protect corporate email.'
-};
-const WHY_BY_TAG = {
-  ports: 'Example: opening the wrong port on a firewall leaves the service unreachable (e.g., RDP uses 3389).',
-  wifi: 'Example: picking channels 1/6/11 on 2.4 GHz minimizes interference and keeps throughput stable.',
-  raid: 'Example: RAID 5 parity tolerates one disk failure; a misconfig can cause data loss and downtime.',
-  psu: 'Example: an undersized PSU leads to crashes under load.',
-  printer: 'Example: understanding fuser/drum helps diagnose streaks and ghosting fast.'
-};
-function whyFor(item){
-  if(item.why) return item.why;
-  if(item.tags && item.tags.length){
-    for(const t of item.tags){ if(WHY_BY_TAG[t]) return WHY_BY_TAG[t]; }
-  }
-  return WHY_BY_DOMAIN[item.domain] || 'On the job, this prevents outages, speeds troubleshooting, and improves security.';
-}
-
 /********************
  * Render Question   *
  ********************/
