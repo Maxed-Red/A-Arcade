@@ -590,37 +590,51 @@ function nextLearnCard(){
 /********************
  * Render Question   *
  ********************/
-function renderItem(selector, item, onDone, compact=false, opts={}){
-  const host = $(selector); if(!host) return; host.innerHTML = '';
+// --- Replace your entire renderItem(...) with this version ---
+function renderItem(selector, item, onDone, compact=false, opts={}) {
+  const host = document.querySelector(selector); if(!host) return; host.innerHTML = '';
 
-  const card=document.createElement('div'); card.className='inset';
+  const card = document.createElement('div'); card.className='inset';
   const meta = `<div class='row small muted'>
-    <span class='pill'>${item.core}</span>
-    <span class='pill'>${item.domain}</span>
+    <span class='pill'>${item.core||''}</span>
+    <span class='pill'>${item.domain||''}</span>
     <span class='spacer'></span>
     <span class='pill'>${(item.type||'mc').toUpperCase()}</span>
   </div>`;
   const q = document.createElement('div'); q.className='question';
-  q.innerHTML = meta + `<div style='margin-top:6px;'>${item.prompt}</div>`;
+  q.innerHTML = meta + `<div style='margin-top:6px;'>${item.prompt||''}</div>`;
   card.appendChild(q);
 
   const answerDiv = document.createElement('div'); answerDiv.className='answer hidden';
   let answered=false;
 
   function verdictBlock(correct){
+    // In Learn mode we ALWAYS show verdict + explanation + why
     if(opts.mode==='learn'){
-      const why = !correct ? whyFor(item) : '';
-      const explain = (!correct && item.explain) ? `<div class='small' style='margin-top:6px;'>${item.explain}</div>` : '';
-      const html = `<div class="verdict ${correct?'ok':'bad'}">${correct?'✅ Correct!':'❌ Incorrect'}</div>` +
-                   (!correct ? `<div style='margin-top:8px;'><strong>Why it matters:</strong> ${why}${explain?'<br>'+explain:''}</div>` : '');
-      answerDiv.innerHTML = html;
+      const explainHTML = item.explain ? `<div class='small' style='margin-top:6px;'>${item.explain}</div>` : '';
+      const whyHTML = `<div style='margin-top:8px;'><strong>Why it matters:</strong> ${whyFor(item)}</div>`;
+      answerDiv.innerHTML =
+        `<div class="verdict ${correct?'ok':'bad'}">${correct?'✅ Correct!':'❌ Incorrect'}</div>` +
+        explainHTML + whyHTML;
     } else {
-      // Non-learn modes just show explanation if any
-      if(item.explain) answerDiv.innerHTML = `<div>${item.explain}</div>`;
+      // Other modes: explanation only (if present)
+      answerDiv.innerHTML = item.explain ? `<div>${item.explain}</div>` : '';
     }
   }
 
-  function finish(correct, quality){ if(answered) return; answered=true; answerDiv.classList.remove('hidden'); onDone && onDone(correct, quality); }
+  function showNextOrFinish(correct){
+    answerDiv.classList.remove('hidden');
+    if(opts.mode==='learn'){
+      const nextBtn = document.createElement('button');
+      nextBtn.className='btn';
+      nextBtn.textContent='Next';
+      nextBtn.style.marginTop='10px';
+      nextBtn.onclick=()=>{ if(answered) return; answered=true; onDone && onDone(correct, correct?5:2); };
+      answerDiv.appendChild(nextBtn);
+    } else {
+      if(answered) return; answered=true; onDone && onDone(correct, correct?5:2);
+    }
+  }
 
   if(item.type==='mc' || item.type==='multi'){
     const choices = document.createElement('div'); choices.className='choices';
@@ -630,12 +644,14 @@ function renderItem(selector, item, onDone, compact=false, opts={}){
         state.seen[item.id]=(state.seen[item.id]||0)+1;
         if(item.type==='mc'){
           const correctIndex = (item.answer||[0])[0];
-          $$('.choice').forEach((o,i)=>{ o.disabled=true; if(i===correctIndex) o.classList.add('correct'); });
+          Array.from(choices.children).forEach((o,i)=>{ o.disabled=true; if(i===correctIndex) o.classList.add('correct'); });
           if(idx!==correctIndex) btn.classList.add('wrong');
-          verdictBlock(idx===correctIndex);
-          card.appendChild(answerDiv); finish(idx===correctIndex);
+          const ok = idx===correctIndex;
+          verdictBlock(ok);
+          card.appendChild(answerDiv);
+          showNextOrFinish(ok);
         } else {
-          // multi-select toggle, submit later
+          // multi-select: toggle; submit below
           btn.classList.toggle('picked');
           btn.style.borderColor = btn.classList.contains('picked')?'#7da3ff':'#2a2f58';
         }
@@ -647,10 +663,17 @@ function renderItem(selector, item, onDone, compact=false, opts={}){
     if(item.type==='multi'){
       const submit = document.createElement('button'); submit.className='btn'; submit.textContent='Submit'; submit.style.marginTop='10px';
       submit.onclick=()=>{
-        const picks = $$('.choice.picked').map((b)=> Array.from(b.parentNode.children).indexOf(b));
-        const correct = picks.length && picks.length===(item.answer||[]).length && picks.every(i=> (item.answer||[]).includes(i));
-        $$('.choice').forEach((o,i)=>{ if((item.answer||[]).includes(i)) o.classList.add('correct'); if(picks.includes(i) && !(item.answer||[]).includes(i)) o.classList.add('wrong'); o.disabled=true; });
-        verdictBlock(correct); card.appendChild(answerDiv); finish(correct);
+        const picks = Array.from(choices.children).map((b,i)=> b.classList.contains('picked')?i:-1).filter(i=>i>-1);
+        const ans = (item.answer||[]);
+        const ok = picks.length && picks.length===ans.length && picks.every(i=> ans.includes(i));
+        Array.from(choices.children).forEach((o,i)=>{
+          if(ans.includes(i)) o.classList.add('correct');
+          if(picks.includes(i) && !ans.includes(i)) o.classList.add('wrong');
+          o.disabled=true;
+        });
+        verdictBlock(ok);
+        card.appendChild(answerDiv);
+        showNextOrFinish(ok);
       };
       card.appendChild(submit);
     }
@@ -663,28 +686,19 @@ function renderItem(selector, item, onDone, compact=false, opts={}){
       state.seen[item.id]=(state.seen[item.id]||0)+1;
       const v=(inp.value||'').trim().toLowerCase();
       const ok = (item.answer||[]).some(a=> String(a).toLowerCase()===v);
-      if(opts.mode==='learn'){
-        const answers = `<div class='small muted'>Answer(s): <strong>${(item.answer||[]).join(', ')}</strong></div>`;
-        const why = !ok ? whyFor(item) : '';
-        const explain = (!ok && item.explain) ? `<div class='small' style='margin-top:6px;'>${item.explain}</div>` : '';
-        answerDiv.innerHTML = `<div class="verdict ${ok?'ok':'bad'}">${ok?'✅ Correct!':'❌ Incorrect'}</div>` +
-                              (ok ? answers : `<div style='margin-top:8px;'><strong>Why it matters:</strong> ${why}${explain?'<br>'+explain:''}</div>` + answers);
-      } else {
-        answerDiv.innerHTML = `<div>Answer(s): <strong>${(item.answer||[]).join(', ')}</strong>${item.explain?'<br>'+item.explain:''}</div>`;
-      }
+      verdictBlock(ok);
+      const answers = `<div class='small muted' style='margin-top:6px;'>Answer(s): <strong>${(item.answer||[]).join(', ')}</strong></div>`;
+      answerDiv.innerHTML += answers;
       inp.style.borderColor = ok?'#1fbf8f':'#d34b4b';
-      card.appendChild(answerDiv); finish(ok, ok?5:2);
+      card.appendChild(answerDiv);
+      showNextOrFinish(ok);
     };
     card.append(inp); card.append(submit);
   }
+
   host.appendChild(card);
 }
 
-function recordResult(item, correct){
-  state.seen[item.id]=(state.seen[item.id]||0)+1;
-  if(correct) state.correct[item.id]=(state.correct[item.id]||0)+1;
-  save();
-}
 
 /*******************
  * Import JSON Pack *
