@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>A+ Arcade — Compat Build</title>
+<title>A+ Arcade — Full Build (No Quiz/Boss)</title>
 <style>
   :root {
     --bg: #0f1220;
@@ -16,6 +16,9 @@
     --danger: #ff6b6b;
     --warn: #ffd166;
     --ok: #06d6a0;
+
+    /* Themeable accents */
+    --accent-3: #ff9f7d;
   }
   * { box-sizing:border-box; }
   body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial; background:linear-gradient(180deg, #0d1020, #171a2b 45%, #0d1020); color:var(--text); }
@@ -39,24 +42,65 @@
   input:checked + .slider { background:#204d3a; border-color:#2b8f71; }
   input:checked + .slider:before { transform:translateX(20px); }
   .kpi { display:flex; gap:10px; align-items:center; font-size:14px; color:#c7ccff }
+  progress { width:100%; height:10px; -webkit-appearance:none; appearance:none; }
+  progress::-webkit-progress-bar { background:#20264a; border-radius:999px; }
+  progress::-webkit-progress-value { background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius:999px; }
   .row { display:flex; gap:12px; align-items:center; }
   .row.wrap { flex-wrap:wrap }
   .spacer { flex:1; }
   .muted { color:var(--muted) }
+  .bad { color:var(--danger) }
+  .ok { color:var(--ok) }
+  .warn { color:var(--warn) }
   .inset { padding:12px; border-radius:12px; background:#10142c; border:1px solid #222959; }
+  .list { margin:8px 0 0; padding:0; list-style:none; }
+  .list li { padding:8px 10px; border-bottom:1px dashed #27306a; }
+  .list li:last-child { border-bottom:0 }
+  .tag { font-size:11px; color:#c9cdf5; background:#111634; border:1px solid #2a2f58; padding:3px 8px; border-radius:999px; }
+  .notice { background:#0f1c30; border:1px solid #2a2f58; padding:10px 12px; border-radius:12px; color:#b7c1ff; }
+  .mode-tab { padding:8px 12px; border-radius:10px; border:1px solid #2a2f58; cursor:pointer; background:#14183a; color:#c9cdf5; }
+  .mode-tab.active { background:linear-gradient(180deg,#25306a,#1a1f45); color:#fff }
   .question { font-size:16px; line-height:1.45; }
   .choices { display:grid; gap:8px; margin-top:12px; }
-  .choice { padding:10px 12px; border-radius:12px; border:1px solid #2a2f58; cursor:pointer; background:#121735; }
+  .choice { padding:10px 12px; border-radius:12px; border:1px solid #2a2f58; cursor:pointer; background:#121735; color:#e9edff; }
   .choice.correct { border-color:#1fbf8f; box-shadow:inset 0 0 0 1px #1fbf8f; }
   .choice.wrong { border-color:#d34b4b; box-shadow:inset 0 0 0 1px #d34b4b; }
-  .answer { margin-top:10px; font-size:14px; color:#fff; } /* brighter */
+  /* Learn/Review answer text — brighter */
+  .answer { margin-top:10px; font-size:14px; color:#fff !important; }
+  .answer .muted { color:#fff !important; opacity:.9; }
+  .answer * { color:inherit; }
+  .small { font-size:12px }
+  .pairs { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+  .dr { padding:8px 10px; border:1px dashed #3b468a; border-radius:10px; background:#121735; cursor:grab; }
+  .drop { min-height:44px; padding:8px 10px; border:1px dashed #5a66b5; border-radius:10px; background:#0f152f; }
+  .flex { display:flex; }
+  .col { display:flex; flex-direction:column; }
+  .center { display:grid; place-items:center; min-height:120px; }
+  .hidden { display:none; }
+  .xp { font-weight:700 }
+  .badge { display:inline-flex; align-items:center; gap:6px; border:1px solid #2a2f58; background:#14183a; padding:6px 10px; border-radius:999px; }
+  .ach { display:flex; gap:10px; align-items:center; padding:10px; border-radius:12px; border:1px solid #2a2f58; background:#10142c; }
+  .ach.done { border-color:#1fbf8f; background:#0f1f20; }
+  .ach-title { font-weight:700 }
+  .timer { font-variant:tabular-nums; }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  @media (max-width:700px){ .pairs { grid-template-columns:1fr; } }
   .verdict { margin-top:10px; padding:10px 12px; border-radius:12px; border:1px solid #2a2f58; background:#101a33; font-weight:700; }
   .verdict.ok { border-color:#1fbf8f; background:#0f1f20; }
   .verdict.bad { border-color:#d34b4b; background:#2a1420; }
+
   /* Dropdown readability */
-  select.btn, select.btn option { color:#000 !important; }
-  select.btn { background:#fff !important; border-color:#c7cbe6; }
-  select.btn option:checked, select.btn option:hover { color:#000; background:#cfe0ff; }
+  select.btn,
+  select.btn option,
+  select.btn optgroup { color:#000 !important; }
+  select.btn { background:#fff !important; border-color:#c7cbe6 !important; }
+  select.btn:focus { outline:2px solid #6aa0ff; outline-offset:2px; }
+  select.btn option:checked,
+  select.btn option:hover { color:#000; background:#cfe0ff; }
+  @supports (-webkit-touch-callout: none) { select.btn { color-scheme: light; } }
+
+  /* Shop cosmetic themes */
+  .theme-preview { width:100%; height:60px; border-radius:10px; border:1px solid #2a2f58; }
 </style>
 </head>
 <body>
@@ -65,170 +109,698 @@
       <div class="row wrap">
         <div>
           <h1>A+ Arcade</h1>
-          <div class="subtitle">Compat build (no modern JS syntax) for older browsers & GH Pages.</div>
+          <div class="subtitle">Gamified study for CompTIA A+ Core 1 (220-1201) & Core 2 (220-1202)</div>
         </div>
         <div class="spacer"></div>
-        <div class="kpi"><span>LVL <span id="lvl">1</span></span> · <span class="xp"><span id="xp">0</span> XP</span> · <span>Streak <span id="streak">0</span></span></div>
+        <div class="kpi">
+          <span>LVL <span id="lvl">1</span></span> ·
+          <span class="xp"><span id="xp">0</span> XP</span> ·
+          <span>Streak <span id="streak">0</span></span> ·
+          <span>💰 <span id="coins">0</span></span>
+        </div>
       </div>
       <div class="wrap" style="padding-top:8px;">
         <div class="controls">
-          <button class="btn" onclick="gotoMode('learn')">Learn (SRS)</button>
-          <button class="btn secondary" onclick="gotoMode('quiz')">Quiz</button>
-          <button class="btn ghost" onclick="gotoMode('exam')">Exam Sim</button>
+          <button class="mode-tab active" data-mode="home">Home</button>
+          <button class="mode-tab" data-mode="learn">Learn (SRS)</button>
+          <button class="mode-tab" data-mode="match">Match</button>
+          <button class="mode-tab" data-mode="exam">Exam Simulator</button>
+          <button class="mode-tab" data-mode="objectives">Objectives</button>
+          <button class="mode-tab" data-mode="shop">Shop</button>
+          <button class="mode-tab" data-mode="profile">Profile</button>
         </div>
       </div>
     </div>
   </header>
 
   <main class="wrap" id="app" style="padding-bottom:64px;">
-    <section id="learn">
+
+    <!-- HOME -->
+    <section id="home">
+      <div class="grid">
+        <div class="card">
+          <h3>Daily Quests</h3>
+          <div class="muted small">Complete all three for a bonus loot drop.</div>
+          <ul class="list" id="questList"></ul>
+          <div class="controls">
+            <button class="btn" onclick="resetDaily(true)">Reroll</button>
+            <button class="btn secondary" onclick="gotoMode('learn')">Study Now</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Import / Export</h3>
+          <p class="muted">Bring in new question packs (JSON) or export your progress.</p>
+          <div class="controls">
+            <label class="btn" for="fileIn">Import JSON</label>
+            <input id="fileIn" class="sr-only" type="file" accept="application/json" />
+            <button class="btn secondary" onclick="exportProgress()">Export Progress</button>
+            <button class="btn ghost" onclick="resetProgress()">Reset</button>
+          </div>
+          <p class="small muted">Schema: see <em>Profile → Data Schema</em>.</p>
+        </div>
+        <div class="card">
+          <h3>Coverage</h3>
+          <div class="row">
+            <div style="width:100%">
+              <div class="row"><span class="pill">1201 · Core 1</span><span class="spacer"></span><span class="small muted">Mobile · Networking · Hardware · Virt/Cloud · H/W & Net Troubleshooting</span></div>
+              <progress id="cov1201" value="0" max="100"></progress>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <div style="width:100%">
+              <div class="row"><span class="pill">1202 · Core 2</span><span class="spacer"></span><span class="small muted">OS · Security · Software Troubleshooting · Operational Procedures</span></div>
+              <progress id="cov1202" value="0" max="100"></progress>
+            </div>
+          </div>
+          <p class="small muted" style="margin-top:8px;">Coverage % = items studied in each core / total items available.</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px;">
+        <h3>Achievements</h3>
+        <div id="achievements" class="grid"></div>
+      </div>
+    </section>
+
+    <!-- LEARN (SRS + Teach + Power-ups) -->
+    <section id="learn" class="hidden">
       <div class="row wrap">
-        <div class="pill">Spaced Repetition</div>
+        <div class="pill">Spaced Repetition (SM-2)</div>
         <div class="spacer"></div>
         <label class="row" style="gap:8px;">
           <span class="small muted">Teach Mode</span>
           <label class="switch">
-            <input id="teachToggle" type="checkbox"><span class="slider"></span>
+            <input id="teachToggle" type="checkbox">
+            <span class="slider"></span>
           </label>
         </label>
         <select id="learnDomain" class="btn ghost"></select>
         <button class="btn" onclick="startLearn()">Load</button>
       </div>
+
+      <div class="inset" style="margin-top:10px;">
+        <div class="row wrap">
+          <div class="pill">Power-ups</div>
+          <div class="spacer"></div>
+          <button class="btn secondary small" onclick="usePower('hint')">💡 Hint (-2)</button>
+          <button class="btn secondary small" onclick="usePower('fifty')">🔀 50/50 (-3)</button>
+          <button class="btn secondary small" onclick="usePower('peek')">👁 Reveal Answer (-5)</button>
+        </div>
+        <div class="small muted">Costs coins. Earn coins from streaks, quests, and exam sims. In Teach Mode, "Reveal" just shows the card again.</div>
+      </div>
+
       <div id="learnArea" class="card" style="margin-top:12px;">
-        <div class="center muted">Pick a domain, toggle <strong>Teach</strong> if you want, then press <strong>Load</strong>.</div>
+        <div class="center muted">Choose a domain, optionally toggle <strong>Teach Mode</strong>, then press <strong>Load</strong>.</div>
       </div>
     </section>
 
-    <section id="quiz" class="hidden">
+    <!-- MATCH -->
+    <section id="match" class="hidden">
       <div class="row wrap">
-        <div class="pill">Arcade Quiz</div>
+        <div class="pill">Matching</div>
         <div class="spacer"></div>
-        <select id="quizDomain" class="btn ghost"></select>
-        <select id="quizCount" class="btn ghost">
-          <option value="10">10 Qs</option><option value="20">20 Qs</option><option value="30">30 Qs</option>
-        </select>
-        <button class="btn" onclick="startQuiz()">Play</button>
+        <select id="matchSet" class="btn ghost"></select>
+        <button class="btn" onclick="startMatch()">Start</button>
       </div>
-      <div id="quizArea" class="card" style="margin-top:12px;">
-        <div class="center muted">Choose domain & count, then press <strong>Play</strong>.</div>
+      <div id="matchArea" class="card" style="margin-top:12px;">
+        <div class="center muted">Pick a set and press <strong>Start</strong>.</div>
       </div>
     </section>
 
+    <!-- EXAM SIM -->
     <section id="exam" class="hidden">
       <div class="row wrap">
         <div class="pill">Exam Simulator</div>
         <div class="spacer"></div>
-        <button class="btn" onclick="startExam()">Start</button>
+        <button class="btn" onclick="startExam()">Start Full Sim</button>
+        <label class="row" style="gap:8px;margin-left:8px;">
+          <span class="small muted">Sound</span>
+          <label class="switch">
+            <input id="soundToggle" type="checkbox">
+            <span class="slider"></span>
+          </label>
+        </label>
       </div>
       <div id="examArea" class="card" style="margin-top:12px;">
-        <div class="center muted">90 minutes · up to 90 questions.</div>
+        <div class="center muted">90 minutes · up to 90 questions · mixed types.</div>
       </div>
     </section>
+
+    <!-- OBJECTIVES -->
+    <section id="objectives" class="hidden">
+      <div class="card">
+        <h3>Official Objective Map</h3>
+        <p class="muted">Aligned to 220-1201 and 220-1202 official objectives. Use this as a checklist. (See <em>Profile → Sources</em> for official PDFs.)</p>
+        <div id="objList" class="grid"></div>
+      </div>
+    </section>
+
+    <!-- SHOP (themes/cosmetics) -->
+    <section id="shop" class="hidden">
+      <div class="grid">
+        <div class="card">
+          <h3>Cosmetic Themes</h3>
+          <div id="themeList" class="grid"></div>
+        </div>
+        <div class="card">
+          <h3>Inventory</h3>
+          <div id="invList" class="grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="profile" class="hidden">
+      <div class="grid">
+        <div class="card">
+          <h3>Player</h3>
+          <ul class="list">
+            <li>Level: <strong id="pLevel">1</strong></li>
+            <li>XP: <strong id="pXP">0</strong></li>
+            <li>Coins: <strong id="pCoins">0</strong></li>
+            <li>Streak: <strong id="pStreak">0</strong></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Data Schema</h3>
+          <pre class="small muted" style="white-space:pre-wrap">
+Item { id, core:"1201|1202", domain:"Networking|Hardware|...", sub:"", type:"mc|multi|type|match|pbq", prompt, choices:["A","B",...], answer:[indexes or strings], explain, why, tags:["ports","wifi"], srs:{ef, rep, ivl, due} }
+MatchSet { id, core, name, pairs:[[left,right], ...] }
+          </pre>
+          <p class="small muted">Import JSON with { items:[Item,...], matchSets:[MatchSet,...] }.</p>
+        </div>
+        <div class="card">
+          <h3>Sources</h3>
+          <ul class="list">
+            <li>CompTIA A+ 220-1201 Objectives (PDF)</li>
+            <li>CompTIA A+ 220-1202 Objectives (PDF)</li>
+            <li>Exam structure & scoring (public info)</li>
+          </ul>
+          <p class="small muted">This is an unofficial study tool. Always verify with the official objectives.</p>
+        </div>
+      </div>
+    </section>
+
   </main>
 
 <script>
-/* ==== Safe storage shim (works even if localStorage is blocked) ==== */
-var storageOK = true;
-try { var _t = '__t'; window.localStorage.setItem(_t,'1'); window.localStorage.removeItem(_t); } catch (e) { storageOK = false; }
-var SafeStore = {
-  get: function(k){ if(!storageOK) return null; try{ return window.localStorage.getItem(k); }catch(e){ return null; } },
-  set: function(k,v){ if(!storageOK) return; try{ window.localStorage.setItem(k,v); }catch(e){} }
-};
-
-/* ==== Utils ==== */
+/********************
+ * Utility & Storage *
+ ********************/
 function $(q){ return document.querySelector(q); }
 function $all(q){ return Array.prototype.slice.call(document.querySelectorAll(q)); }
+function rnd(n){ return Math.floor(Math.random()*n); }
 function shuffle(arr){ return arr.map(function(v){ return [Math.random(),v]; }).sort(function(a,b){ return a[0]-b[0]; }).map(function(x){ return x[1]; }); }
 function uid(){ return Math.random().toString(36).slice(2,9); }
+function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
 
-/* ==== State ==== */
-var SAVE_KEY='aplus_arcade_v120x';
-var defaultState={xp:0,level:1,streak:0,bossWins:0,seen:{},correct:{},srs:{},settings:{teach:false},ach:{}};
+/* Safe localStorage */
+var storageOK = true;
+try{ var _t='__t'; localStorage.setItem(_t,'1'); localStorage.removeItem(_t); }catch(e){ storageOK=false; }
+var SafeStore = { get:function(k){ if(!storageOK) return null; try{ return localStorage.getItem(k); }catch(e){ return null; } },
+                  set:function(k,v){ if(!storageOK) return; try{ localStorage.setItem(k,v);}catch(e){} } };
+
+const SAVE_KEY = 'aplus_arcade_full_v120x';
 var state;
-try { state = JSON.parse(SafeStore.get(SAVE_KEY) || 'null') || defaultState; } catch(e){ state = defaultState; }
-function save(){ SafeStore.set(SAVE_KEY, JSON.stringify(state)); updateHeader(); }
-function updateHeader(){ $('#lvl').textContent=state.level; $('#xp').textContent=state.xp; $('#streak').textContent=state.streak; }
-function addXP(n){ state.xp=Math.max(0, state.xp+n); var lvl=Math.floor(state.xp/200)+1; state.level=lvl; save(); }
-function incStreak(){ state.streak++; save(); }
+(function(){
+  var defaults = {
+    xp:0, level:1, streak:0, coins:0,
+    seen:{}, correct:{}, srs:{},
+    settings:{ teach:false, sound:false, theme:'default' },
+    daily:{ date:'', quests:[] },
+    inventory:{ themes:['default'] },
+    ach:{ streak10:false, coverage80:false, examPass:false, daily3:false }
+  };
+  try{ state = JSON.parse(SafeStore.get(SAVE_KEY) || 'null') || defaults; } catch(e){ state = defaults; }
+})();
+function save(){ SafeStore.set(SAVE_KEY, JSON.stringify(state)); updateHeader(); renderAchievements(); }
+function resetProgress(){ if(confirm('Reset all progress?')){ localStorage.removeItem(SAVE_KEY); location.reload(); } }
+function exportProgress(){ var blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'}); var url = URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download='aplus-arcade-progress.json'; a.click(); URL.revokeObjectURL(url); }
+
+/*************
+ * Audio FX   *
+ *************/
+var audioCtx = null;
+function playTone(type){ if(!state.settings.sound) return;
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    var osc = audioCtx.createOscillator(); var gain = audioCtx.createGain();
+    osc.type = 'sine'; osc.frequency.value = (type==='good')? 880 : 220;
+    gain.gain.value = 0.08;
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); setTimeout(function(){ osc.stop(); }, 120);
+  }catch(e){}
+}
+
+/*************
+ * XP & LVLs *
+ *************/
+function addXP(n){ state.xp = Math.max(0, state.xp + n); var newLevel = Math.floor(state.xp/200)+1; if(newLevel>state.level) toast('Level up! → LVL '+newLevel); state.level=newLevel; save(); }
+function addCoins(n){ state.coins = Math.max(0, state.coins + n); save(); }
+function incStreak(){ state.streak++; if(state.streak===10 && !state.ach.streak10){ state.ach.streak10=true; toast('🏆 Achievement: Hot Streak'); } save(); }
 function resetStreak(){ state.streak=0; save(); }
 
-/* ==== Content ==== */
-var ITEMS=[], MATCH_SETS=[];
-function addMC(core,domain,prompt,choices,answerIndex,explain,tags){ ITEMS.push({id:uid(),core:core,domain:domain,type:'mc',prompt:prompt,choices:choices,answer:[answerIndex],explain:explain,tags:tags||[]}); }
-function addMulti(core,domain,prompt,choices,answerIndexes,explain,tags){ ITEMS.push({id:uid(),core:core,domain:domain,type:'multi',prompt:prompt,choices:choices,answer:answerIndexes,explain:explain,tags:tags||[]}); }
-function addType(core,domain,prompt,answers,explain,tags){ ITEMS.push({id:uid(),core:core,domain:domain,type:'type',prompt:prompt,answer:answers.map(function(s){return String(s).toLowerCase();}),explain:explain,tags:tags||[]}); }
+/****************
+ * Content Data *
+ ****************/
+var ITEMS = [];
+var MATCH_SETS = [];
+var OBJ = [
+  { core:'1201', domain:'Mobile Devices', bullets:[
+    'Install & configure laptop hardware/components',
+    'Mobile device accessories & ports',
+    'Mobile device synchronization methods']},
+  { core:'1201', domain:'Networking', bullets:[
+    'SOHO network types & features', 'Common ports & protocols', 'Wireless standards & encryption', 'Network devices & tools']},
+  { core:'1201', domain:'Hardware', bullets:[
+    'Cables & connectors', 'Power supplies & motherboards', 'RAM & storage', 'Peripherals & printers']},
+  { core:'1201', domain:'Virtualization & Cloud', bullets:[
+    'Client-side virtualization', 'Cloud models & services', 'Thin/Thick provisioning basics']},
+  { core:'1201', domain:'Hardware/Network Troubleshooting', bullets:[
+    'Troubleshooting methodology', 'Common hardware failures', 'Network troubleshooting tools & commands']},
+  { core:'1202', domain:'Operating Systems', bullets:[
+    'Windows editions, features, install/upgrade', 'macOS & Linux basics', 'Command-line tools', 'System utilities']},
+  { core:'1202', domain:'Security', bullets:[
+    'Threats & vulnerabilities', 'Secure protocols', 'Authentication & permissions', 'Wireless security & hardening']},
+  { core:'1202', domain:'Software Troubleshooting', bullets:[
+    'OS & application errors', 'Mobile OS issues', 'Malware symptoms & removal']},
+  { core:'1202', domain:'Operational Procedures', bullets:[
+    'Safety & environmental impacts', 'Communication & professionalism', 'Change management & documentation', 'SLA, licensing, and incident response basics']},
+];
+function addMC(core, domain, prompt, choices, answerIndex, explain, tags){ ITEMS.push({ id: uid(), core:core, domain:domain, type:'mc', prompt:prompt, choices:choices, answer:[answerIndex], explain:explain, tags:tags||[] }); }
+function addMulti(core, domain, prompt, choices, answerIndexes, explain, tags){ ITEMS.push({ id: uid(), core:core, domain:domain, type:'multi', prompt:prompt, choices:choices, answer:answerIndexes, explain:explain, tags:tags||[] }); }
+function addType(core, domain, prompt, answerStrings, explain, tags){ ITEMS.push({ id: uid(), core:core, domain:domain, type:'type', prompt:prompt, answer:answerStrings.map(function(s){return String(s).toLowerCase();}), explain:explain, tags:tags||[] }); }
+function addMatch(core, name, pairs){ MATCH_SETS.push({ id: uid(), core:core, name:name, pairs:pairs }); }
 
-addMC('1201','Networking','Which protocol and port are used for secure web traffic?',['HTTP on 80','HTTPS on 443','TLS on 995','SSH on 22'],1,'HTTPS typically uses TCP 443.',['ports']);
-addType('1202','Security','Write the secure alternative to Telnet.',['ssh'],'SSH replaces Telnet for encrypted remote terminal sessions.',['ports']);
-addMC('1201','Networking','802.11ac operates primarily in which band?',['2.4 GHz','5 GHz','900 MHz','Both 2.4 and 5 GHz'],1,'802.11ac is 5 GHz only.',['wifi']);
-addMC('1201','Hardware','Which printer uses an imaging drum and fuser?',['Laser','Inkjet','Thermal','Impact'],0,'Laser printers use toner, drum, transfer, and fuser.', ['printer']);
-addMulti('1201','Hardware','Select all display outputs.',['HDMI','DisplayPort','RJ-45','DVI-D'],[0,1,3],'RJ-45 is networking.');
+// --- Seed content (concise) ---
+addMatch('1201','Ports ↔ Protocols', [
+  ['20/21','FTP'],['22','SSH'],['23','Telnet'],['25','SMTP'],['53','DNS'],['67/68','DHCP'],['80','HTTP'],['110','POP3'],['143','IMAP'],['123','NTP'],['161/162','SNMP'],['389','LDAP'],['443','HTTPS'],['445','SMB'],['548','AFP'],['3389','RDP']
+]);
+addMC('1201','Networking','Which protocol and port are used for secure web traffic?', ['HTTP on 80','HTTPS on 443','TLS on 995','SSH on 22'], 1, 'HTTPS typically uses TCP 443.', ['ports']);
+addType('1201','Networking','Default TCP port for SMB file sharing on modern Windows?', ['445'], 'SMB over TCP uses 445.', ['ports']);
+addType('1202','Security','Write the secure alternative to Telnet.', ['ssh'], 'SSH replaces Telnet for encrypted remote terminal sessions.', ['ports']);
 
-/* ==== Learn (SM-2) ==== */
-function sm2(item, quality){
-  if(!state.srs[item.id]) state.srs[item.id]={ef:2.5,rep:0,ivl:0,due:Date.now()};
-  var ef=state.srs[item.id].ef, rep=state.srs[item.id].rep, ivl=state.srs[item.id].ivl;
-  if(quality<3){ rep=0; ivl=1; } else { if(rep===0) ivl=1; else if(rep===1) ivl=6; else ivl=Math.max(1, Math.round(ivl*ef)); rep+=1; ef=ef+(0.1-(5-quality)*(0.08+(5-quality)*0.02)); if(ef<1.3) ef=1.3; }
-  var next = Date.now() + ivl*24*60*60*1000 * (0.1+Math.random()*0.15);
-  state.srs[item.id]={ef:ef,rep:rep,ivl:ivl,due:next}; save();
+addMC('1201','Networking','802.11ac operates primarily in which band?', ['2.4 GHz','5 GHz','900 MHz','Both 2.4 and 5 GHz'], 1, '802.11ac is 5 GHz only.', ['wifi']);
+addMC('1201','Networking','Which 802.11 standard introduced OFDMA and 1024-QAM?', ['802.11n','802.11ac','802.11ax','802.11g'], 2, '802.11ax (Wi-Fi 6) adds OFDMA and 1024-QAM.', ['wifi']);
+addMC('1201','Networking','Best channel choice to avoid overlap on 2.4 GHz in NA?', ['1, 6, 11','2, 7, 12','3, 6, 9','4, 8, 13'], 0, 'Use non-overlapping channels 1, 6, 11.', ['wifi']);
+
+addMatch('1201','Cable ↔ Max Distance', [
+  ['Cat5e 1000BASE-T','100 m'],['Cat6 10GBASE-T','55 m'],['Cat6a 10GBASE-T','100 m'],['Multimode fiber (OM3)','300 m @10G'],['Single-mode fiber','10+ km']
+]);
+addMC('1201','Hardware','Which connector provides digital audio+video and supports HDCP?', ['VGA','DVI-D','HDMI','DisplayPort'], 2, 'HDMI supports digital A/V and HDCP. DP also, but common answer is HDMI.');
+addMC('1201','Hardware','Which printer uses an imaging drum and fuser?', ['Laser','Inkjet','Thermal','Impact'], 0, 'Laser printers use toner, drum, transfer, and fuser stages.', ['printer']);
+
+addMC('1201','Hardware','DDR4 DIMMs have how many pins (desktop)?', ['184','200','240','288'], 3, 'DDR4 desktop DIMMs use 288 pins.');
+addMC('1201','Hardware','Which RAID provides striping with parity (single-disk fault tolerance)?', ['RAID 0','RAID 1','RAID 5','RAID 10'], 2, 'RAID 5 = striping with distributed parity.', ['raid']);
+addMC('1201','Hardware','M.2 NVMe typically uses which bus?', ['SATA','USB','PCIe','Thunderbolt'], 2, 'NVMe uses PCIe lanes for high throughput and low latency.');
+
+addMC('1201','Virtualization & Cloud','A user runs Windows on a Mac with Parallels. This is:', ['Type 1 hypervisor','Type 2 hypervisor','Bare-metal virtualization','Containerization'], 1, 'Parallels/VMware Workstation are type 2 (hosted).');
+addMC('1201','Virtualization & Cloud','IaaS provides:', ['Hosted apps only','Virtualized hardware resources','Developer platforms only','Security services only'], 1, 'IaaS = compute, storage, network building blocks.');
+
+addMC('1201','Hardware/Network Troubleshooting','First step of the troubleshooting process?', ['Identify the problem','Establish a theory','Test the theory','Document findings'], 0, 'CompTIA methodology starts with identifying the problem.');
+addMC('1201','Hardware/Network Troubleshooting','User reports intermittent Wi-Fi. First simple fix?', ['Replace NIC','Change SSID','Move closer / reduce interference','Reimage OS'], 2, 'Eliminate interference/distance before invasive steps.', ['wifi']);
+
+addMC('1202','Operating Systems','Which edition supports joining Active Directory in Windows 10?', ['Home','Pro','S','Education'], 1, 'Windows 10/11 Pro and above can join AD.');
+addType('1202','Operating Systems','Command to check and repair Windows file system on next reboot?', ['chkdsk /f'], 'chkdsk with /f schedules repairs.');
+addType('1202','Operating Systems','PowerShell package manager command prefix (v5+)?', ['install-package','find-package','get-package'], 'OneGet/PackageManagement cmdlets include Find-Package, Install-Package, etc.');
+addMC('1202','Operating Systems','Where do you manage Windows services?', ['Device Manager','Services.msc','Control Panel > Programs','Task Scheduler'], 1, 'Services MMC or the Services snap-in.');
+
+addType('1202','Operating Systems','macOS disk utility for APFS/HFS+ volumes?', ['disk utility','diskutil'], 'Disk Utility (GUI) or diskutil (CLI).');
+addType('1202','Operating Systems','Linux command to show IP configuration (newer distros)?', ['ip addr','ip a'], 'ip addr replaces ifconfig on many systems.');
+addType('1202','Operating Systems','Linux: follow live log output for syslog file?', ['tail -f /var/log/syslog'], 'tail -f streams appended lines.');
+
+addMC('1202','Security','Best practice for securing SOHO wireless?', ['WEP + hidden SSID','WPA2/WPA3-Personal + long passphrase','MAC filtering only','Open network'], 1, 'Use WPA2/WPA3 with strong passphrase; avoid WEP/open.', ['wifi']);
+addMC('1202','Security','What does principle of least privilege enforce?', ['Admin rights to all','Deny by default','Users get only necessary permissions','Full access to expedite support'], 2, 'Grant minimum access required to perform tasks.');
+addMC('1202','Security','Which is a social engineering attack?', ['ARP poisoning','Spear phishing','SQL injection','DDoS'], 1, 'Spear phishing targets specific individuals with crafted messages.');
+addMC('1202','Security','Which tool removes persistent malware by booting a minimal OS?', ['Windows Defender Offline','System Restore','MSCONFIG','DISM'], 0, 'Defender Offline scans outside the main OS.');
+
+addMC('1202','Software Troubleshooting','PC reboots randomly after installing a new GPU. Likely cause?', ['Bad PSU sizing','Too much RAM','Loose SATA cable','Wrong keyboard layout'], 0, 'Inadequate PSU wattage can cause reboots under load.', ['psu']);
+addMC('1202','Software Troubleshooting','Browser has many pop-ups and redirects. First response?', ['Disable DNS','Run anti-malware scan','Reinstall OS','Replace RAM'], 1, 'Scan with reputable anti-malware, then remediate.');
+
+addMC('1202','Operational Procedures','Proper ESD protection while working on a PC?', ['Touch the case occasionally','Use an ESD strap & mat','Wear rubber gloves','Stand on carpet'], 1, 'Use wrist strap connected to ground and an ESD mat.');
+addMC('1202','Operational Procedures','Which framework is most relevant for change management?', ['ITIL','PCI DSS','HIPAA','GDPR'], 0, 'ITIL includes structured change management practices.');
+addMC('1202','Operational Procedures','Best first response to a user report of PII leakage?', ['Erase evidence','Notify media','Follow incident response plan','Ignore until confirmed'], 2, 'Follow the IR plan: identify, contain, etc.');
+
+addType('1201','Hardware','What voltage does a SATA power connector provide besides 5V? (enter one of them)', ['3.3','12'], 'SATA power supplies 3.3V, 5V, and 12V.');
+addType('1201','Hardware','UEFI replacement for BIOS setting files often named what extension for updates?', ['.cap'], '.CAP is common for UEFI capsule updates.');
+addMC('1201','Hardware','Which connector for CPU power on modern boards?', ['Molex','ATX12V 4/8-pin','PCIe 6-pin','SATA power'], 1, 'CPU EPS12V 4/8-pin supplies CPU power.');
+addMC('1201','Networking','Which command displays the ARP table in Windows?', ['arp -a','ipconfig /all','netstat -an','nslookup'], 0, 'arp -a shows ARP cache.');
+addType('1202','Operating Systems','Windows tool to edit startup apps (modern builds)?', ['task manager'], 'Task Manager Startup tab.');
+addMC('1202','Security','You suspect a phishing email. Best first action?', ['Click link to verify','Report per policy','Forward to coworkers','Delete silently'], 1, 'Report using the organization’s process.');
+addMC('1202','Operational Procedures','SDS stands for:', ['System Data Sheet','Safety Data Sheet','Secure Data Standard','Software Distribution Set'], 1, 'SDS: Safety Data Sheet.');
+
+addMulti('1201','Hardware','Select all connectors primarily for display output.', ['HDMI','DisplayPort','RJ-45','DVI-D'], [0,1,3], 'HDMI, DP, and DVI are video outputs; RJ-45 is networking.');
+addMulti('1201','Networking','Select valid IPv6 features.', ['128-bit addresses','NAT required','No ARP (uses NDP)','Built-in IPSec'], [0,2,3], 'IPv6 uses NDP, has 128-bit addresses, and mandates IPSec support.');
+addMulti('1202','Security','Choose strong authentication factors.', ['Password','Smart card','Fingerprint','Mother’s maiden name'], [1,2], 'Something you have (smart card) and something you are (biometrics).');
+
+addMatch('1202','Windows Tools', [
+  ['msconfig','Manage boot options/services'],
+  ['regedit','Edit the registry'],
+  ['sfc /scannow','Verify system files'],
+  ['dism /restorehealth','Repair component store'],
+  ['eventvwr','View logs']
+]);
+
+/*****************
+ * Objectives UI *
+ *****************/
+function renderObjectives(){
+  var wrap = $('#objList'); if(!wrap) return;
+  wrap.innerHTML = '';
+  for(var oi=0; oi<OBJ.length; oi++){
+    var o = OBJ[oi];
+    var totalDomain = ITEMS.filter(function(i){ return i.domain===o.domain; }).length;
+    var learned = ITEMS.filter(function(i){ return i.domain===o.domain && state.seen[i.id]; }).length;
+    var pct = totalDomain? Math.round((learned/totalDomain)*100): 0;
+    var div = document.createElement('div');
+    div.className = 'inset';
+    div.innerHTML = "<div class='row'><div><strong>"+o.core+" · "+o.domain+"</strong></div><div class='spacer'></div><div>"+pct+"%</div></div>"+
+    "<ul class='list'>"+o.bullets.map(function(b){return "<li>"+b+"</li>";}).join('')+"</ul>";
+    wrap.appendChild(div);
+  }
+  updateCoverageBars();
+}
+function updateCoverageBars(){
+  var c1 = ITEMS.filter(function(i){ return i.core==='1201'; }).length;
+  var c2 = ITEMS.filter(function(i){ return i.core==='1202'; }).length;
+  var s1 = ITEMS.filter(function(i){ return i.core==='1201' && state.seen[i.id]; }).length;
+  var s2 = ITEMS.filter(function(i){ return i.core==='1202' && state.seen[i.id]; }).length;
+  $('#cov1201').value = c1? Math.round((s1/c1)*100):0;
+  $('#cov1202').value = c2? Math.round((s2/c2)*100):0;
+  if(!state.ach.coverage80 && c1 && c2){
+    var allPct = Math.round(((s1+s2)/(c1+c2))*100);
+    if(allPct>=80){ state.ach.coverage80=true; toast('🏆 Achievement: Coverage 80%'); save(); }
+  }
 }
 
-var learnQueue=[];
+/****************
+ * Achievements *
+ ****************/
+var ACH = [
+  { key:'streak10', title:'Hot Streak', desc:'Answer 10 in a row correctly.' },
+  { key:'coverage80', title:'Objective Explorer', desc:'Study 80% of available items.' },
+  { key:'daily3', title:'Quest Complete', desc:'Finish all three daily quests.' },
+  { key:'examPass', title:'Exam Ready', desc:'Pass the full Exam Simulator.' },
+];
+function renderAchievements(){
+  var host = $('#achievements'); if(!host) return; host.innerHTML = '';
+  for(var i=0;i<ACH.length;i++){
+    var a=ACH[i]; var card=document.createElement('div'); card.className='ach ' + (state.ach[a.key] ? 'done' : '');
+    card.innerHTML = "<div class='badge'>🏆</div><div><div class='ach-title'>"+a.title+"</div><div class='muted small'>"+a.desc+"</div></div>";
+    host.appendChild(card);
+  }
+}
+
+/*****************
+ * Daily Quests  *
+ *****************/
+var QUEST_POOL = [
+  { id:'learn20', text:'Study 20 Learn cards', coins:10, done:0, goal:20, type:'learn' },
+  { id:'match1', text:'Complete a Match set', coins:8, done:0, goal:1, type:'match' },
+  { id:'exam1', text:'Start an Exam Sim', coins:6, done:0, goal:1, type:'exam' }
+];
+function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function resetDaily(force){
+  var today = todayStr();
+  if(!force && state.daily.date===today) return;
+  state.daily.date=today;
+  // pick 3 quests randomly
+  var pool=shuffle(QUEST_POOL.slice());
+  state.daily.quests = pool.slice(0,3);
+  save(); renderQuests();
+}
+function renderQuests(){
+  var ul = $('#questList'); if(!ul) return; ul.innerHTML='';
+  var allDone=true;
+  for(var i=0;i<state.daily.quests.length;i++){
+    var q=state.daily.quests[i];
+    var li=document.createElement('li');
+    var pct = Math.round(100* clamp(q.done,0,q.goal) / q.goal);
+    li.innerHTML = "<div class='row'><div>"+q.text+"</div><div class='spacer'></div><div>"+q.done+"/"+q.goal+"</div></div>"+
+      "<progress value='"+pct+"' max='100' style='width:100%'></progress>"+
+      "<div class='small muted'>Reward: 💰 "+q.coins+"</div>";
+    ul.appendChild(li);
+    if(q.done<q.goal) allDone=false;
+  }
+  if(allDone && state.daily.quests.length){
+    if(!state.ach.daily3){ state.ach.daily3=true; toast('🏆 Achievement: Quest Complete'); }
+    addCoins(10); // bonus
+  }
+}
+function bumpQuest(type, inc){
+  for(var i=0;i<state.daily.quests.length;i++){
+    var q=state.daily.quests[i]; if(q.type===type){ q.done = clamp((q.done||0)+inc, 0, q.goal); if(q.done===q.goal){ addCoins(q.coins); } }
+  }
+  save(); renderQuests();
+}
+
+/****************
+ * Toast helper *
+ ****************/
+var toastTimer=null; function toast(msg){
+  clearTimeout(toastTimer);
+  var t = $('#toast'); if(!t){ t=document.createElement('div'); t.id='toast'; t.style.position='fixed'; t.style.bottom='20px'; t.style.left='50%'; t.style.transform='translateX(-50%)'; t.style.background='#0b122a'; t.style.border='1px solid #2a2f58'; t.style.borderRadius='12px'; t.style.padding='10px 14px'; t.style.zIndex='99'; t.style.boxShadow='0 10px 30px rgba(0,0,0,.35)'; document.body.appendChild(t);} t.textContent=msg; t.style.opacity='1'; toastTimer=setTimeout(function(){ t.style.opacity='0'; }, 2000);
+}
+
+/***********************
+ * Mode switching tabs *
+ ***********************/
+function gotoMode(mode){
+  $all('.mode-tab').forEach(function(b){ b.classList.toggle('active', b.dataset.mode===mode); });
+  ['home','learn','match','exam','objectives','shop','profile'].forEach(function(id){ $('#'+id).classList.toggle('hidden', id!==mode); });
+  if(mode==='objectives') renderObjectives();
+  if(mode==='profile') updateProfile();
+  if(mode==='shop') renderShop();
+}
+
+/*******************
+ * Dropdown fills  *
+ *******************/
+function fillDomains(){
+  var domains = []; for(var i=0;i<ITEMS.length;i++){ var key=ITEMS[i].core+' · '+ITEMS[i].domain; if(domains.indexOf(key)===-1) domains.push(key); }
+  domains.sort();
+  function sel(el) { el.innerHTML = "<option value='all'>All Domains</option>" + domains.map(function(d){ return "<option>"+d+"</option>"; }).join(''); }
+  sel($('#learnDomain'));
+  // Match sets
+  $('#matchSet').innerHTML = MATCH_SETS.map(function(m){ return "<option value='"+m.id+"'>"+m.core+" · "+m.name+"</option>"; }).join('');
+  // Restore toggles
+  $('#teachToggle').checked = !!state.settings.teach;
+}
+
+/* ============================
+   WHY examples for Learn mode
+   ============================ */
+var WHY_BY_DOMAIN = {
+  'Networking': 'Example: choosing the wrong port or protocol can block apps—e.g., opening 80 instead of 443 breaks secure sites.',
+  'Hardware': 'Example: an underpowered PSU can cause random reboots when the GPU is under load.',
+  'Operating Systems': 'Example: using Services.msc to restart a stuck service avoids rebooting a production PC.',
+  'Security': 'Example: weak Wi-Fi security (WEP, short passphrases) lets attackers join your network quickly.',
+  'Software Troubleshooting': 'Example: rolling back a faulty driver can instantly resolve a new BSOD.',
+  'Operational Procedures': 'Example: change control prevents unplanned outages during business hours.',
+  'Virtualization & Cloud': 'Example: picking IaaS when you need OS control avoids PaaS/runtime lock-in.',
+  'Hardware/Network Troubleshooting': 'Example: following the CompTIA methodology avoids replacing good parts and wasting budget.',
+  'Mobile Devices': 'Example: correct sync/MDM settings prevent data loss and protect corporate email.'
+};
+var WHY_BY_TAG = {
+  ports: 'Example: opening the wrong port on a firewall leaves the service unreachable (e.g., RDP uses 3389).',
+  wifi: 'Example: picking channels 1/6/11 on 2.4 GHz minimizes interference and keeps throughput stable.',
+  raid: 'Example: RAID 5 parity tolerates one disk failure; a misconfig can cause data loss and downtime.',
+  psu: 'Example: an undersized PSU leads to crashes under load.',
+  printer: 'Example: understanding fuser/drum helps diagnose streaks and ghosting fast.'
+};
+function whyFor(item){
+  if(item.why) return item.why;
+  if(item.tags && item.tags.length){ for(var t=0;t<item.tags.length;t++){ var tag=item.tags[t]; if(WHY_BY_TAG[tag]) return WHY_BY_TAG[tag]; } }
+  return WHY_BY_DOMAIN[item.domain] || 'On the job, this prevents outages, speeds troubleshooting, and improves security.';
+}
+
+/****************
+ * Learn (SM-2) *
+ ****************/
+function sm2(item, quality){
+  if(!state.srs[item.id]) state.srs[item.id] = { ef:2.5, rep:0, ivl:0, due: Date.now() };
+  var ef=state.srs[item.id].ef, rep=state.srs[item.id].rep, ivl=state.srs[item.id].ivl;
+  if(quality < 3){ rep = 0; ivl = 1; } else {
+    if(rep === 0) ivl = 1; else if(rep === 1) ivl = 6; else ivl = Math.round(Math.max(1, ivl * ef));
+    rep += 1; ef = ef + (0.1 - (5-quality)*(0.08 + (5-quality)*0.02)); if(ef<1.3) ef=1.3;
+  }
+  var jitter = 0.1 + Math.random()*0.15;
+  var next = Date.now() + ivl*24*60*60*1000 * jitter;
+  state.srs[item.id] = {ef:ef,rep:rep,ivl:ivl,due:next}; save();
+}
+
+var learnQueue = [], currentItem = null;
 function startLearn(){
   state.settings.teach = !!$('#teachToggle').checked; save();
-  var filter = ($('#learnDomain').value||'all');
-  var now = Date.now();
-  var pool = ITEMS.filter(function(i){ return filter==='all' || (i.core+' · '+i.domain)===filter; });
-  if(!pool.length) pool = ITEMS.slice();
+
+  var filter = ($('#learnDomain').value || 'all'); var now = Date.now();
+  var pool = ITEMS.filter(function(i){ return (filter==='all' || (i.core+' · '+i.domain)===filter); });
+  if(pool.length===0) pool = ITEMS.slice();
   var due = pool.filter(function(i){ return ((state.srs[i.id] && state.srs[i.id].due) || 0) <= now; });
-  if(!due.length) due = pool.slice();
+  if(due.length===0) due = pool.slice();
   learnQueue = shuffle(due).slice(0,30);
-  if(!learnQueue.length){ $('#learnArea').innerHTML='<div class="center muted">No content. Import a pack.</div>'; return; }
-  if(state.settings.teach) nextTeachCard(); else nextLearnCard();
+  if(learnQueue.length===0){ $('#learnArea').innerHTML = '<div class="center muted">No cards. Import a pack from Home.</div>'; return; }
+
+  if(state.settings.teach){ nextTeachCard(); } else { nextLearnCard(); }
 }
 function nextLearnCard(){
-  var item = learnQueue.shift();
-  if(!item){ $('#learnArea').innerHTML='<div class="center">Done!</div>'; return; }
-  renderItem('#learnArea', item, function(ok,quality){ try{ sm2(item, quality|| (ok?5:2)); }catch(e){}; state.seen[item.id]=(state.seen[item.id]||0)+1; if(ok) state.correct[item.id]=(state.correct[item.id]||0)+1; save(); nextLearnCard(); }, false, {mode:'learn'});
+  currentItem = learnQueue.shift();
+  if(!currentItem){ $('#learnArea').innerHTML='<div class="center ok">Nice! No more due cards.</div>'; bumpQuest('learn',1); return; }
+  renderItem('#learnArea', currentItem, function(correct,quality){
+    try{ sm2(currentItem, quality|| (correct?5:2)); }catch(e){}
+    state.seen[currentItem.id]=(state.seen[currentItem.id]||0)+1; if(correct) state.correct[currentItem.id]=(state.correct[currentItem.id]||0)+1; save();
+    bumpQuest('learn',1);
+    nextLearnCard();
+  }, false, {mode:'learn'});
 }
+
+/* ---------- Teach Mode (concept cards) ---------- */
 function nextTeachCard(){
-  var item = learnQueue.shift();
-  if(!item){ $('#learnArea').innerHTML='<div class="center">Done!</div>'; return; }
-  renderTeachCard('#learnArea', item, function(q){ try{ sm2(item, q||4);}catch(e){}; state.seen[item.id]=(state.seen[item.id]||0)+1; save(); nextTeachCard(); });
+  currentItem = learnQueue.shift();
+  if(!currentItem){ $('#learnArea').innerHTML='<div class="center ok">Nice! No more cards in Teach Mode.</div>'; bumpQuest('learn',1); return; }
+  renderTeachCard('#learnArea', currentItem, function(quality){
+    try{ sm2(currentItem, quality||4); }catch(e){}
+    state.seen[currentItem.id]=(state.seen[currentItem.id]||0)+1; save();
+    bumpQuest('learn',1);
+    nextTeachCard();
+  });
 }
-function renderTeachCard(sel, item, onDone){
-  var host=$(sel); host.innerHTML='';
-  var card=document.createElement('div'); card.className='inset';
-  var ansText='';
-  if(item.type==='mc' || item.type==='multi'){
-    var idxs = Array.isArray(item.answer) ? item.answer.map(function(n){return Number(n);}) : [];
-    ansText = idxs.map(function(i){ return String.fromCharCode(65+i)+'. '+((item.choices && item.choices[i]) || ''); }).join(' · ');
-  } else if(item.type==='type'){ ansText=(item.answer||[]).join(', '); }
-  card.innerHTML = "<div class='row small muted'><span class='pill'>"+(item.core||'')+"</span><span class='pill'>"+(item.domain||'')+
-    "</span><span class='spacer'></span><span class='pill'>Teach</span></div>"+
-    "<div class='question' style='margin-top:6px;'><strong>"+(item.prompt||'')+"</strong></div>"+
-    "<div class='answer' style='margin-top:10px;'>"+
-    (ansText? "<div class='small muted'>Correct answer(s): <strong>"+ansText+"</strong></div>": "")+
-    (item.explain? "<div style='margin-top:6px;'>"+item.explain+"</div>": "")+
-    "<div style='margin-top:8px;'><strong>Why it matters:</strong> "+whyFor(item)+"</div></div>"+
-    "<div class='controls' style='margin-top:12px;'><button class='btn' id='teachGot'>Got it</button><button class='btn secondary' id='teachReview'>Need review</button></div>";
+
+function renderTeachCard(selector, item, onDone){
+  var host = $(selector); host.innerHTML='';
+  var card = document.createElement('div'); card.className='inset';
+
+  var ansText = (function(){
+    if(item.type==='mc' || item.type==='multi'){
+      var indices = Array.isArray(item.answer) ? item.answer.map(function(n){return Number(n);}) : [];
+      return indices.map(function(i){
+        var label = String.fromCharCode(65+i);
+        return (label+'. ' + (item.choices && item.choices[i] ? item.choices[i] : '')).trim();
+      }).join(' · ');
+    } else if(item.type==='type'){
+      return (item.answer||[]).join(', ');
+    }
+    return '';
+  })();
+
+  card.innerHTML = ""
+    + "<div class='row small muted'>"
+    + "<span class='pill'>"+(item.core||'')+"</span>"
+    + "<span class='pill'>"+(item.domain||'')+"</span>"
+    + "<span class='spacer'></span>"
+    + "<span class='pill'>Teach</span>"
+    + "</div>"
+    + "<div class='question' style='margin-top:6px;'><strong>"+(item.prompt||'Concept')+"</strong></div>"
+    + "<div class='answer' style='margin-top:10px;'>"
+    + (ansText ? "<div class='small muted'>Correct answer(s): <strong>"+ansText+"</strong></div>" : "")
+    + (item.explain ? "<div style='margin-top:6px;'>"+item.explain+"</div>" : "")
+    + "<div style='margin-top:8px;'><strong>Why it matters:</strong> "+whyFor(item)+"</div>"
+    + "</div>"
+    + "<div class='controls' style='margin-top:12px;'>"
+    + "<button class='btn' id='teachGot'>Got it</button>"
+    + "<button class='btn secondary' id='teachReview'>Need review</button>"
+    + "</div>";
   host.appendChild(card);
-  $('#teachGot').onclick=function(){ onDone && onDone(4); };
-  $('#teachReview').onclick=function(){ onDone && onDone(2); };
+  $('#teachGot').onclick = function(){ onDone && onDone(4); };
+  $('#teachReview').onclick = function(){ onDone && onDone(2); };
 }
 
-/* ==== Render Item ==== */
-function whyFor(item){
-  var WHY_BY_DOMAIN={'Networking':'Example: choosing the wrong port can block apps.','Hardware':'Example: underpowered PSU causes reboots.','Operating Systems':'Example: restart a stuck service without reboot.','Security':'Example: weak Wi-Fi lets attackers in.'};
-  var WHY_BY_TAG={ports:'Example: wrong firewall port leaves service unreachable.',wifi:'Example: 1/6/11 reduce interference.'};
-  if(item.why) return item.why;
-  if(item.tags){ for(var i=0;i<item.tags.length;i++){ var t=item.tags[i]; if(WHY_BY_TAG[t]) return WHY_BY_TAG[t]; } }
-  return WHY_BY_DOMAIN[item.domain]||'Prevents outages and speeds troubleshooting.';
+/********************
+ * Power-ups (Learn) *
+ ********************/
+function usePower(kind){
+  if(!currentItem){ toast('Load Learn first'); return; }
+  var cost = (kind==='hint')?2 : (kind==='fifty')?3 : 5;
+  if(state.coins < cost){ toast('Not enough coins'); return; }
+  addCoins(-cost);
+  if(kind==='hint'){
+    // show Why it matters pre-answer
+    toast('Hint shown');
+    var hint=document.createElement('div'); hint.className='inset'; hint.innerHTML="<div class='small'>💡 <strong>Hint:</strong> "+whyFor(currentItem)+"</div>";
+    $('#learnArea').prepend(hint);
+  } else if(kind==='fifty'){
+    // disable half of wrong options for MC/MULTI
+    var choices = $all('#learnArea .choice');
+    var ans = (currentItem.answer && currentItem.answer.length)? currentItem.answer.map(function(n){return Number(n);}) : [];
+    var wrongIdx = []; for(var i=0;i<choices.length;i++){ if(ans.indexOf(i)===-1) wrongIdx.push(i); }
+    shuffle(wrongIdx).slice(0, Math.floor(wrongIdx.length/2)).forEach(function(i){ if(choices[i]){ choices[i].disabled=true; choices[i].style.opacity=.5; } });
+  } else if(kind==='peek'){
+    // reveal answer text area
+    var ansArea = $all('#learnArea .answer')[0];
+    if(ansArea){ ansArea.classList.remove('hidden'); }
+  }
 }
 
-function renderItem(sel, item, onDone, compact, opts){
-  var host=$(sel); if(!host) return; host.innerHTML='';
-  opts = opts||{}; compact=!!compact;
+/********
+ * Match *
+ ********/
+function startMatch(){
+  var id = $('#matchSet').value; var set=null; for(var i=0;i<MATCH_SETS.length;i++){ if(MATCH_SETS[i].id===id){ set=MATCH_SETS[i]; break; } }
+  if(!set){ $('#matchArea').innerHTML = '<div class="center muted">No set.</div>'; return; }
+  var L = set.pairs.map(function(p){return p[0];}); var R = shuffle(set.pairs.map(function(p){return p[1];}));
+  var used = {}; var correct=0, total=set.pairs.length; var t0 = performance.now();
+  var host = $('#matchArea'); host.innerHTML = '';
+  var left = document.createElement('div'); var right = document.createElement('div'); left.className='col'; right.className='col'; left.style.gap='8px'; right.style.gap='8px';
+  L.forEach(function(txt){ var d=document.createElement('div'); d.className='dr'; d.textContent=txt; d.draggable=true; d.dataset.key=txt; left.appendChild(d); });
+  R.forEach(function(txt){ var drop=document.createElement('div'); drop.className='drop'; drop.dataset.accept=txt; drop.textContent = txt + '  ⟵ drop here'; right.appendChild(drop); });
+  var grid=document.createElement('div'); grid.className='pairs'; grid.appendChild(left); grid.appendChild(right); host.appendChild(grid);
+  host.appendChild(document.createElement('hr'));
+  var status=document.createElement('div'); status.className='small muted'; host.appendChild(status);
+
+  host.addEventListener('dragstart', function(e){ if(e.target.classList.contains('dr')){ e.dataTransfer.setData('text/plain', e.target.dataset.key); } });
+  host.addEventListener('dragover', function(e){ if(e.target.classList.contains('drop')) e.preventDefault(); });
+  host.addEventListener('drop', function(e){
+    if(!e.target.classList.contains('drop')) return;
+    e.preventDefault();
+    var key = e.dataTransfer.getData('text/plain'); var want = e.target.dataset.accept;
+    if(used[key]) return;
+    var ok = set.pairs.some(function(p){ return p[0]===key && p[1]===want; });
+    if(ok){
+      e.target.style.borderColor='#1fbf8f'; e.target.style.background='#0f1f20'; e.target.textContent = key + ' ✓ ' + want;
+      used[key]=true; correct++; addXP(5); incStreak(); playTone('good');
+    } else {
+      e.target.style.borderColor='#d34b4b'; addXP(-2); resetStreak(); playTone('bad');
+    }
+    status.textContent = correct+'/'+total+' matched';
+    if(correct===total){
+      var secs = Math.round((performance.now()-t0)/1000); toast('Completed in '+secs+'s'); addCoins(5); bumpQuest('match',1);
+    }
+  });
+}
+
+/*******************
+ * Exam Simulator   *
+ *******************/
+function startExam(){
+  var host = $('#examArea'); var minutes = 90; var time = minutes*60; var pool = shuffle(ITEMS).slice(0, Math.min(90, ITEMS.length)); var correct=0, idx=0;
+  if(pool.length<50){ host.innerHTML = '<div class="notice">This starter pack has fewer than 50 questions. Import a larger pack for a true 90-question sim.</div>'; }
+  host.innerHTML = '';
+  var header=document.createElement('div'); header.className='row'; var timer=document.createElement('div'); timer.className='timer pill'; timer.textContent='90:00'; header.appendChild(timer); host.appendChild(header);
+  var t=setInterval(function(){ time--; if(time<=0){ finish(); } var m=Math.floor(time/60), s=String(time%60); if(s.length===1) s='0'+s; timer.textContent = m+":"+s; },1000);
+  function finish(){
+    clearInterval(t);
+    var pct = Math.round((correct/Math.max(1,pool.length))*100);
+    var pass = pct >= 75;
+    host.innerHTML = "<div class='center'><div>Exam Complete — Score: <strong>"+pct+"%</strong> "+(pass?"<span class='ok'>(PASS)</span>":"<span class='bad'>(FAIL)</span>")+"</div><div class='small muted'>Approximation: real A+ scores are on a 100–900 scale.</div><div class='controls' style='margin-top:10px'><button class='btn' onclick='startExam()'>Retry</button></div></div>";
+    if(pass){ state.ach.examPass=true; addXP(200); addCoins(20); save(); }
+  }
+  function next(){
+    var item = pool[idx++]; if(!item){ finish(); return; }
+    renderItem('#examArea', item, function(ok){
+      if(ok){ correct++; addXP(5); incStreak(); playTone('good'); } else { addXP(-1); resetStreak(); playTone('bad'); }
+      next();
+    }, false, {mode:'exam'});
+  }
+  bumpQuest('exam',1);
+  next();
+}
+
+/********************
+ * Render Question   *
+ ********************/
+function renderItem(selector, item, onDone, compact, opts){
+  var host = $(selector); if(!host) return; host.innerHTML = '';
+  opts = opts || {}; compact = !!compact;
 
   function ansIndexes(){
     if(item.type==='mc' || item.type==='multi'){
@@ -241,7 +813,10 @@ function renderItem(sel, item, onDone, compact, opts){
   function ansText(){
     if(item.type==='mc' || item.type==='multi'){
       var idxs = ansIndexes();
-      return idxs.map(function(i){ return String.fromCharCode(65+i)+'. '+((item.choices && item.choices[i]) || ''); }).join(' · ');
+      return idxs.map(function(i){
+        var label = String.fromCharCode(65 + i);
+        return (label+'. ' + (item.choices && item.choices[i] ? item.choices[i] : '')).trim();
+      }).join(' · ');
     }
     if(item.type==='type'){ return (item.answer||[]).join(', '); }
     return '';
@@ -249,34 +824,47 @@ function renderItem(sel, item, onDone, compact, opts){
 
   var card=document.createElement('div'); card.className='inset';
   var meta = "<div class='row small muted'><span class='pill'>"+(item.core||'')+"</span><span class='pill'>"+(item.domain||'')+"</span><span class='spacer'></span><span class='pill'>"+(item.type||'mc').toUpperCase()+"</span></div>";
-  var q=document.createElement('div'); q.className='question'; q.innerHTML = meta + "<div style='margin-top:6px;'>"+(item.prompt||'')+"</div>"; card.appendChild(q);
-  var answerDiv=document.createElement('div'); answerDiv.className='answer hidden'; var advanced=false;
+  var q = document.createElement('div'); q.className='question'; q.innerHTML = meta + "<div style='margin-top:6px;'>"+(item.prompt||'')+"</div>"; card.appendChild(q);
+
+  var answerDiv = document.createElement('div'); answerDiv.className='answer hidden';
+  var advanced=false;
 
   function showReview(correct, userValue){
-    userValue = userValue||'';
-    var whyHTML = (opts.mode==='learn')? "<div style='margin-top:8px;'><strong>Why it matters:</strong> "+whyFor(item)+"</div>" : "";
-    var explHTML = (opts.mode==='learn' && item.explain)? "<div class='small' style='margin-top:6px;'>"+item.explain+"</div>" : "";
+    var whyHTML = (opts.mode==='learn') ? "<div style='margin-top:8px;'><strong>Why it matters:</strong> "+whyFor(item)+"</div>" : "";
+    var explHTML = (opts.mode==='learn' && item.explain) ? "<div class='small' style='margin-top:6px;'>"+item.explain+"</div>" : "";
     var corrHTML = "<div class='small muted' style='margin-top:6px;'>Correct answer(s): <strong>"+ansText()+"</strong></div>";
-    var youHTML = (item.type==='type' && userValue)? "<div class='small muted'>Your answer: <em>"+userValue+"</em></div>" : "";
-    answerDiv.innerHTML = "<div class='verdict "+(correct?'ok':'bad')+"'>"+(correct?'✅ Correct!':'❌ Incorrect')+"</div>"+youHTML+corrHTML+explHTML+whyHTML;
+    var youHTML  = (item.type==='type' && userValue) ? "<div class='small muted'>Your answer: <em>"+userValue+"</em></div>" : "";
+
+    answerDiv.innerHTML =
+      "<div class='verdict "+(correct?'ok':'bad')+"'>"+(correct?'✅ Correct!':'❌ Incorrect')+"</div>" +
+      youHTML + corrHTML + explHTML + whyHTML;
+
     answerDiv.classList.remove('hidden'); card.appendChild(answerDiv);
+
     if(opts.mode==='learn'){
-      var nextBtn=document.createElement('button'); nextBtn.className='btn'; nextBtn.textContent='Next'; nextBtn.style.marginTop='10px';
-      nextBtn.onclick=function(){ if(advanced) return; advanced=true; try{ onDone && onDone(correct, correct?5:2); }catch(e){} };
+      var nextBtn = document.createElement('button'); nextBtn.className='btn'; nextBtn.textContent='Next'; nextBtn.style.marginTop='10px';
+      nextBtn.onclick=function(){ if(advanced) return; advanced=true; try{ onDone && onDone(correct, correct?5:2); }catch(e){ onDone && onDone(true,3);} };
       answerDiv.appendChild(nextBtn);
     } else {
-      setTimeout(function(){ if(advanced) return; advanced=true; try{ onDone && onDone(correct, correct?5:2); }catch(e){}; }, 1000);
+      setTimeout(function(){ if(advanced) return; advanced=true; try{ onDone && onDone(correct, correct?5:2); }catch(e){}; }, 900);
     }
   }
 
   if(item.type==='type'){
-    var inp=document.createElement('input'); inp.type='text'; inp.placeholder='Type your answer'; inp.style.width='100%'; inp.style.padding='10px'; inp.style.borderRadius='10px'; inp.style.border='1px solid #2a2f58'; inp.style.background='#0f152f'; inp.style.color='white';
+    var inp=document.createElement('input'); inp.type='text'; inp.placeholder='Type your answer'; inp.style.width='100%'; inp.style.padding='10px'; inp.style.borderRadius='10px'; inp.style.border='1px solid #2a2f58'; inp.style.background='#0f152f'; inp.style.color='var(--text)';
     var submit=document.createElement('button'); submit.className='btn'; submit.textContent='Check'; submit.style.marginTop='10px';
-    submit.onclick=function(){ state.seen[item.id]=(state.seen[item.id]||0)+1; var v=(inp.value||'').trim().toLowerCase(); var ok=(item.answer||[]).some(function(a){ return String(a).toLowerCase()===v; }); inp.style.borderColor=ok?'#1fbf8f':'#d34b4b'; showReview(ok,v); };
+    submit.onclick=function(){
+      state.seen[item.id]=(state.seen[item.id]||0)+1;
+      var v=(inp.value||'').trim().toLowerCase();
+      var ok = (item.answer||[]).some(function(a){ return String(a).toLowerCase()===v; });
+      inp.style.borderColor = ok?'#1fbf8f':'#d34b4b';
+      showReview(ok, v);
+    };
     card.appendChild(inp); card.appendChild(submit); host.appendChild(card); return;
   }
 
-  var choices=document.createElement('div'); choices.className='choices';
+  // MC / MULTI
+  var choices = document.createElement('div'); choices.className='choices';
   (item.choices||[]).forEach(function(c,idx){
     var btn=document.createElement('button'); btn.className='choice'; btn.textContent=c;
     btn.onclick=function(){
@@ -286,6 +874,7 @@ function renderItem(sel, item, onDone, compact, opts){
         Array.prototype.slice.call(choices.children).forEach(function(o,i){ o.disabled=true; if(i===correctIndex) o.classList.add('correct'); });
         if(idx!==correctIndex) btn.classList.add('wrong');
         showReview(idx===correctIndex);
+        if(idx===correctIndex){ addCoins(1); playTone('good'); incStreak(); } else { resetStreak(); playTone('bad'); }
       } else {
         btn.classList.toggle('picked');
         btn.style.borderColor = btn.classList.contains('picked')?'#7da3ff':'#2a2f58';
@@ -296,7 +885,7 @@ function renderItem(sel, item, onDone, compact, opts){
   card.appendChild(choices);
 
   if(item.type==='multi'){
-    var submit=document.createElement('button'); submit.className='btn'; submit.textContent='Submit'; submit.style.marginTop='10px';
+    var submit = document.createElement('button'); submit.className='btn'; submit.textContent='Submit'; submit.style.marginTop='10px';
     submit.onclick=function(){
       var picks = Array.prototype.slice.call(choices.children).map(function(b,i){ return b.classList.contains('picked')?i:-1; }).filter(function(i){ return i>-1; });
       var ans = ansIndexes();
@@ -307,6 +896,7 @@ function renderItem(sel, item, onDone, compact, opts){
         if(picks.indexOf(i)>-1 && ans.indexOf(i)===-1) o.classList.add('wrong');
       });
       showReview(ok);
+      if(ok){ addCoins(2); playTone('good'); incStreak(); } else { resetStreak(); playTone('bad'); }
     };
     card.appendChild(submit);
   }
@@ -314,45 +904,82 @@ function renderItem(sel, item, onDone, compact, opts){
   host.appendChild(card);
 }
 
-/* ==== Quiz ==== */
-var quizDeck=[], quizCorrect=0, quizTotal=0;
-function startQuiz(){
-  var filter = $('#quizDomain').value || 'all';
-  var count = parseInt($('#quizCount').value,10) || 10;
-  var pool = shuffle(ITEMS.filter(function(i){ return filter==='all' || (i.core+' · '+i.domain)===filter; }));
-  quizDeck = pool.slice(0,count); quizCorrect=0; quizTotal=count; renderQuizNext();
+/*******************
+ * Import JSON Pack *
+ *******************/
+$('#fileIn').addEventListener('change', function(e){
+  var file = e.target.files[0]; if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(){ 
+    try{
+      var data = JSON.parse(reader.result);
+      if(Array.isArray(data.items)) for(var i=0;i<data.items.length;i++){ var it=data.items[i]; ITEMS.push(Object.assign({id: uid()}, it)); }
+      if(Array.isArray(data.matchSets)) for(var m=0;m<data.matchSets.length;m++){ var ms=data.matchSets[m]; MATCH_SETS.push(Object.assign({id: uid()}, ms)); }
+      toast('Imported successfully.'); fillDomains(); renderObjectives();
+    }catch(err){ alert('Invalid JSON pack.'); }
+  };
+  reader.readAsText(file);
+});
+
+/***********
+ * Profile  *
+ ***********/
+function updateProfile(){
+  $('#pLevel').textContent = state.level; $('#pXP').textContent = state.xp; $('#pStreak').textContent = state.streak; $('#pCoins').textContent = state.coins;
 }
-function renderQuizNext(){
-  var item = quizDeck.shift();
-  if(!item){ $('#quizArea').innerHTML="<div class='center'><div>Score: <strong>"+quizCorrect+"/"+quizTotal+"</strong></div><div class='controls' style='margin-top:10px'><button class='btn' onclick='startQuiz()'>Play again</button></div></div>"; return; }
-  renderItem('#quizArea', item, function(ok){ if(ok){ quizCorrect++; addXP(10); incStreak(); } else { addXP(-3); resetStreak(); } renderQuizNext(); }, false, {mode:'quiz'});
+function updateHeader(){ $('#lvl').textContent=state.level; $('#xp').textContent=state.xp; $('#streak').textContent=state.streak; $('#coins').textContent=state.coins; }
+
+/********
+ * Shop  *
+ ********/
+var THEMES = [
+  { key:'default', name:'Midnight', cost:0, vars:{ '--panel':'#171a2b','--panel-2':'#1e2240','--accent':'#8ab4ff','--accent-2':'#7df9c9','--text':'#e7e9f5','--muted':'#a9add4' } },
+  { key:'neon', name:'Neon Wave', cost:20, vars:{ '--panel':'#0c0e28','--panel-2':'#10163c','--accent':'#ff66c4','--accent-2':'#00f0ff','--text':'#f5f6ff','--muted':'#c1c5ff' } },
+  { key:'terminal', name:'Terminal Green', cost:15, vars:{ '--panel':'#06110a','--panel-2':'#0b1a11','--accent':'#00ff88','--accent-2':'#00ffaa','--text':'#dfffe8','--muted':'#9be6c0' } },
+];
+function renderShop(){
+  var host = $('#themeList'); host.innerHTML='';
+  for(var i=0;i<THEMES.length;i++){
+    (function(t){
+      var owned = state.inventory.themes.indexOf(t.key)>-1;
+      var div=document.createElement('div'); div.className='inset';
+      // preview box
+      var pv=document.createElement('div'); pv.className='theme-preview'; pv.style.background='linear-gradient(90deg,'+t.vars['--accent']+','+t.vars['--accent-2']+')'; pv.style.marginBottom='8px'; div.appendChild(pv);
+      var row=document.createElement('div'); row.className='row'; row.innerHTML="<div><strong>"+t.name+"</strong> <span class='small muted'>"+(owned?'owned':'cost 💰 '+t.cost)+"</span></div>"; div.appendChild(row);
+      var controls=document.createElement('div'); controls.className='controls';
+      var tryBtn=document.createElement('button'); tryBtn.className='btn ghost'; tryBtn.textContent='Try'; tryBtn.onclick=function(){ applyTheme(t.key); }; controls.appendChild(tryBtn);
+      if(!owned){
+        var buy=document.createElement('button'); buy.className='btn'; buy.textContent='Buy'; buy.onclick=function(){ if(state.coins>=t.cost){ addCoins(-t.cost); state.inventory.themes.push(t.key); applyTheme(t.key); save(); renderShop(); toast('Theme unlocked!'); } else { toast('Not enough coins'); } };
+        controls.appendChild(buy);
+      } else {
+        var equip=document.createElement('button'); equip.className='btn'; equip.textContent = (state.settings.theme===t.key?'Equipped':'Equip'); equip.onclick=function(){ applyTheme(t.key); save(); renderShop(); };
+        controls.appendChild(equip);
+      }
+      div.appendChild(controls); host.appendChild(div);
+    })(THEMES[i]);
+  }
+  // Inventory panel
+  var inv = $('#invList'); inv.innerHTML = "<div class='inset small'>Owned themes: "+state.inventory.themes.join(', ')+"</div>";
+}
+function applyTheme(key){
+  var t=null; for(var i=0;i<THEMES.length;i++){ if(THEMES[i].key===key){ t=THEMES[i]; break; } }
+  if(!t) return;
+  var root=document.documentElement;
+  for(var k in t.vars){ root.style.setProperty(k, t.vars[k]); }
+  state.settings.theme = key; save();
 }
 
-/* ==== Exam ==== */
-function startExam(){
-  var host=$('#examArea'); var minutes=90; var time=minutes*60;
-  var pool=shuffle(ITEMS).slice(0, Math.min(90, ITEMS.length)); var correct=0, idx=0;
-  host.innerHTML=''; var header=document.createElement('div'); header.className='row'; var timer=document.createElement('div'); timer.className='timer pill'; timer.textContent='90:00'; header.appendChild(timer); host.appendChild(header);
-  var t=setInterval(function(){ time--; if(time<=0){ finish(); } var m=Math.floor(time/60), s=String(time%60).padStart?String(time%60).padStart(2,'0'):('0'+(time%60)).slice(-2); timer.textContent=m+":"+s; },1000);
-  function finish(){ clearInterval(t); var pct=Math.round((correct/Math.max(1,pool.length))*100); var pass=pct>=75; host.innerHTML="<div class='center'><div>Exam Complete — Score: <strong>"+pct+"%</strong> "+(pass?"<span class='ok'>(PASS)</span>":"<span class='bad'>(FAIL)</span>")+"</div><div class='controls' style='margin-top:10px'><button class='btn' onclick='startExam()'>Retry</button></div></div>"; }
-  function next(){ var item=pool[idx++]; if(!item){ finish(); return; } renderItem('#examArea', item, function(ok){ if(ok){ correct++; addXP(5);} else { addXP(-1);} next(); }, false, {mode:'exam'}); }
-  next();
+/**************
+ * Initialize  *
+ **************/
+function init(){
+  $all('.mode-tab').forEach(function(btn){ btn.addEventListener('click', function(){ gotoMode(btn.dataset.mode); }); });
+  $('#soundToggle').checked = !!state.settings.sound;
+  $('#soundToggle').addEventListener('change', function(){ state.settings.sound = !!this.checked; save(); if(this.checked){ playTone('good'); } });
+  fillDomains(); renderObjectives(); renderAchievements(); updateHeader();
+  resetDaily(false); renderQuests();
+  applyTheme(state.settings.theme || 'default');
 }
-
-/* ==== Mode & Domains ==== */
-function gotoMode(mode){
-  ['learn','quiz','exam'].forEach(function(id){ $('#'+id).classList.toggle('hidden', id!==mode); });
-}
-function fillDomains(){
-  var domains = [];
-  ITEMS.forEach(function(i){ var key=i.core+' · '+i.domain; if(domains.indexOf(key)===-1) domains.push(key); });
-  domains.sort();
-  function put(el){ var html = "<option value='all'>All Domains</option>"+domains.map(function(d){ return "<option>"+d+"</option>"; }).join(''); el.innerHTML=html; }
-  put($('#learnDomain')); put($('#quizDomain'));
-  $('#teachToggle').checked = !!state.settings.teach;
-}
-
-function init(){ fillDomains(); updateHeader(); }
 init();
 </script>
 </body>
