@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>A+ Arcade — CompTIA A+ 220-1201/1202 Study Game</title>
+<title>A+ Arcade — Compat Build</title>
 <style>
   :root {
     --bg: #0f1220;
@@ -16,26 +16,7 @@
     --danger: #ff6b6b;
     --warn: #ffd166;
     --ok: #06d6a0;
-    /* Brighten the Learn/Review answer text */
   }
-.answer { color: #fff; }
-
-/* The "Correct answer(s): ..." line was using .muted — override it here */
-.answer .muted { color: #fff; opacity: .9; }
-
-/* (Optional) if any nested spans inherit muted colors from elsewhere */
-.answer * { color: inherit; }
-
-   /* Force selects and their options to use dark text on light bg */
-select.btn,
-select.btn option { color:#000 !important; }
-
-select.btn { background:#fff !important; border-color:#c7cbe6; }
-
-/* Try to keep hovered/selected options readable (support varies by browser/OS) */
-select.btn option:checked,
-select.btn option:hover { color:#000; background:#cfe0ff; }
- 
   * { box-sizing:border-box; }
   body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial; background:linear-gradient(180deg, #0d1020, #171a2b 45%, #0d1020); color:var(--text); }
   header { position:sticky; top:0; z-index:10; background:rgba(15,18,32,.9); backdrop-filter: blur(8px); border-bottom:1px solid #2a2f58; }
@@ -58,49 +39,24 @@ select.btn option:hover { color:#000; background:#cfe0ff; }
   input:checked + .slider { background:#204d3a; border-color:#2b8f71; }
   input:checked + .slider:before { transform:translateX(20px); }
   .kpi { display:flex; gap:10px; align-items:center; font-size:14px; color:#c7ccff }
-  progress { width:100%; height:10px; -webkit-appearance:none; appearance:none; }
-  progress::-webkit-progress-bar { background:#20264a; border-radius:999px; }
-  progress::-webkit-progress-value { background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius:999px; }
   .row { display:flex; gap:12px; align-items:center; }
   .row.wrap { flex-wrap:wrap }
   .spacer { flex:1; }
   .muted { color:var(--muted) }
-  .bad { color:var(--danger) }
-  .ok { color:var(--ok) }
-  .warn { color:var(--warn) }
   .inset { padding:12px; border-radius:12px; background:#10142c; border:1px solid #222959; }
-  .list { margin:8px 0 0; padding:0; list-style:none; }
-  .list li { padding:8px 10px; border-bottom:1px dashed #27306a; }
-  .list li:last-child { border-bottom:0 }
-  .tag { font-size:11px; color:#c9cdf5; background:#111634; border:1px solid #2a2f58; padding:3px 8px; border-radius:999px; }
-  .notice { background:#0f1c30; border:1px solid #2a2f58; padding:10px 12px; border-radius:12px; color:#b7c1ff; }
-  .mode-tab { padding:8px 12px; border-radius:10px; border:1px solid #2a2f58; cursor:pointer; background:#14183a; color:#c9cdf5; }
-  .mode-tab.active { background:linear-gradient(180deg,#25306a,#1a1f45); color:#fff }
   .question { font-size:16px; line-height:1.45; }
   .choices { display:grid; gap:8px; margin-top:12px; }
   .choice { padding:10px 12px; border-radius:12px; border:1px solid #2a2f58; cursor:pointer; background:#121735; }
   .choice.correct { border-color:#1fbf8f; box-shadow:inset 0 0 0 1px #1fbf8f; }
   .choice.wrong { border-color:#d34b4b; box-shadow:inset 0 0 0 1px #d34b4b; }
-  .answer { margin-top:10px; font-size:14px; color:#cfd4ff; }
-  .small { font-size:12px }
-  .pairs { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-  .dr { padding:8px 10px; border:1px dashed #3b468a; border-radius:10px; background:#121735; cursor:grab; }
-  .drop { min-height:44px; padding:8px 10px; border:1px dashed #5a66b5; border-radius:10px; background:#0f152f; }
-  .flex { display:flex; }
-  .col { display:flex; flex-direction:column; }
-  .center { display:grid; place-items:center; min-height:120px; }
-  .hidden { display:none; }
-  .xp { font-weight:700 }
-  .badge { display:inline-flex; align-items:center; gap:6px; border:1px solid #2a2f58; background:#14183a; padding:6px 10px; border-radius:999px; }
-  .ach { display:flex; gap:10px; align-items:center; padding:10px; border-radius:12px; border:1px solid #2a2f58; background:#10142c; }
-  .ach.done { border-color:#1fbf8f; background:#0f1f20; }
-  .ach-title { font-weight:700 }
-  .timer { font-variant:tabular-nums; }
-  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-  @media (max-width:700px){ .pairs { grid-template-columns:1fr; } }
+  .answer { margin-top:10px; font-size:14px; color:#fff; } /* brighter */
   .verdict { margin-top:10px; padding:10px 12px; border-radius:12px; border:1px solid #2a2f58; background:#101a33; font-weight:700; }
   .verdict.ok { border-color:#1fbf8f; background:#0f1f20; }
   .verdict.bad { border-color:#d34b4b; background:#2a1420; }
+  /* Dropdown readability */
+  select.btn, select.btn option { color:#000 !important; }
+  select.btn { background:#fff !important; border-color:#c7cbe6; }
+  select.btn option:checked, select.btn option:hover { color:#000; background:#cfe0ff; }
 </style>
 </head>
 <body>
@@ -109,76 +65,47 @@ select.btn option:hover { color:#000; background:#cfe0ff; }
       <div class="row wrap">
         <div>
           <h1>A+ Arcade</h1>
-          <div class="subtitle">Gamified study for CompTIA A+ Core 1 (220-1201) & Core 2 (220-1202)</div>
+          <div class="subtitle">Compat build (no modern JS syntax) for older browsers & GH Pages.</div>
         </div>
         <div class="spacer"></div>
         <div class="kpi"><span>LVL <span id="lvl">1</span></span> · <span class="xp"><span id="xp">0</span> XP</span> · <span>Streak <span id="streak">0</span></span></div>
       </div>
       <div class="wrap" style="padding-top:8px;">
         <div class="controls">
-          <button class="mode-tab active" data-mode="home">Home</button>
-          <button class="mode-tab" data-mode="learn">Learn (SRS)</button>
-          <button class="mode-tab" data-mode="quiz">Arcade Quiz</button>
-          <button class="mode-tab" data-mode="match">Match</button>
-          <button class="mode-tab" data-mode="boss">Boss Battles</button>
-          <button class="mode-tab" data-mode="exam">Exam Simulator</button>
-          <button class="mode-tab" data-mode="objectives">Objectives</button>
-          <button class="mode-tab" data-mode="profile">Profile</button>
+          <button class="btn" onclick="gotoMode('learn')">Learn (SRS)</button>
+          <button class="btn secondary" onclick="gotoMode('quiz')">Quiz</button>
+          <button class="btn ghost" onclick="gotoMode('exam')">Exam Sim</button>
         </div>
       </div>
     </div>
   </header>
 
   <main class="wrap" id="app" style="padding-bottom:64px;">
-
-    <!-- HOME -->
-    <section id="home">
-      <div class="grid">
-        <div class="card">
-          <h3>Quick Start</h3>
-          <p class="muted">Pick a mode. Earn XP. Level up skills across every A+ objective. Your progress auto-saves (local only).</p>
-          <div class="controls">
-            <button class="btn" onclick="gotoMode('learn')">Start: Learn (SRS)</button>
-            <button class="btn secondary" onclick="gotoMode('quiz')">10-Question Quiz</button>
-            <button class="btn ghost" onclick="gotoMode('exam')">Full Exam Sim</button>
-          </div>
-          <div class="notice" style="margin-top:10px;">
-            <strong>Heads-up:</strong> Import content packs any time via Home → Import. Learn will always give feedback; Quiz/Boss/Exam show quick ✅/❌ overlays.
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- LEARN (SRS + Teach) -->
-    <section id="learn" class="hidden">
+    <section id="learn">
       <div class="row wrap">
-        <div class="pill">Spaced Repetition (SM-2)</div>
+        <div class="pill">Spaced Repetition</div>
         <div class="spacer"></div>
         <label class="row" style="gap:8px;">
           <span class="small muted">Teach Mode</span>
           <label class="switch">
-            <input id="teachToggle" type="checkbox">
-            <span class="slider"></span>
+            <input id="teachToggle" type="checkbox"><span class="slider"></span>
           </label>
         </label>
         <select id="learnDomain" class="btn ghost"></select>
         <button class="btn" onclick="startLearn()">Load</button>
       </div>
       <div id="learnArea" class="card" style="margin-top:12px;">
-        <div class="center muted">Choose a domain, optionally toggle <strong>Teach Mode</strong>, then press <strong>Load</strong>.</div>
+        <div class="center muted">Pick a domain, toggle <strong>Teach</strong> if you want, then press <strong>Load</strong>.</div>
       </div>
     </section>
 
-    <!-- QUIZ -->
     <section id="quiz" class="hidden">
       <div class="row wrap">
         <div class="pill">Arcade Quiz</div>
         <div class="spacer"></div>
         <select id="quizDomain" class="btn ghost"></select>
         <select id="quizCount" class="btn ghost">
-          <option value="10">10 Qs</option>
-          <option value="20">20 Qs</option>
-          <option value="30">30 Qs</option>
+          <option value="10">10 Qs</option><option value="20">20 Qs</option><option value="30">30 Qs</option>
         </select>
         <button class="btn" onclick="startQuiz()">Play</button>
       </div>
@@ -187,296 +114,176 @@ select.btn option:hover { color:#000; background:#cfe0ff; }
       </div>
     </section>
 
-    <!-- MATCH -->
-    <section id="match" class="hidden">
-      <div class="row wrap">
-        <div class="pill">Matching</div>
-        <div class="spacer"></div>
-        <select id="matchSet" class="btn ghost"></select>
-        <button class="btn" onclick="startMatch()">Start</button>
-      </div>
-      <div id="matchArea" class="card" style="margin-top:12px;">
-        <div class="center muted">Pick a set and press <strong>Start</strong>.</div>
-      </div>
-    </section>
-
-    <!-- BOSS BATTLES -->
-    <section id="boss" class="hidden">
-      <div class="row wrap">
-        <div class="pill">Boss Battles</div>
-        <div class="spacer"></div>
-        <select id="bossDomain" class="btn ghost"></select>
-        <button class="btn" onclick="startBoss()">Fight Boss</button>
-      </div>
-      <div id="bossArea" class="card" style="margin-top:12px;">
-        <div class="center muted">Select a domain and press <strong>Fight Boss</strong>. 10 questions · 60s timer · 80% to win.</div>
-      </div>
-    </section>
-
-    <!-- EXAM SIM -->
     <section id="exam" class="hidden">
       <div class="row wrap">
         <div class="pill">Exam Simulator</div>
         <div class="spacer"></div>
-        <button class="btn" onclick="startExam()">Start Full Sim</button>
+        <button class="btn" onclick="startExam()">Start</button>
       </div>
       <div id="examArea" class="card" style="margin-top:12px;">
-        <div class="center muted">90 minutes · up to 90 questions · mixed types. Scored against A+ passing thresholds.</div>
+        <div class="center muted">90 minutes · up to 90 questions.</div>
       </div>
     </section>
-
   </main>
 
 <script>
-/********************
- * Utility & Storage *
- ********************/
-const $ = (q) => document.querySelector(q);
-const $$ = (q) => Array.from(document.querySelectorAll(q));
-const shuffle = (arr) => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
-const uid = () => Math.random().toString(36).slice(2,9);
-
-const SAVE_KEY = 'aplus_arcade_v120x';
-let state = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null') || {
-  xp: 0, level:1, streak:0, bossWins:0,
-  seen: {}, correct: {}, srs: {},
-  settings: { teach:false },
-  ach: { streak10:false, ports50:false, osPerfect:false, examPass:false }
+/* ==== Safe storage shim (works even if localStorage is blocked) ==== */
+var storageOK = true;
+try { var _t = '__t'; window.localStorage.setItem(_t,'1'); window.localStorage.removeItem(_t); } catch (e) { storageOK = false; }
+var SafeStore = {
+  get: function(k){ if(!storageOK) return null; try{ return window.localStorage.getItem(k); }catch(e){ return null; } },
+  set: function(k,v){ if(!storageOK) return; try{ window.localStorage.setItem(k,v); }catch(e){} }
 };
-function save(){ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); updateHeader(); }
-function resetProgress(){ if(confirm('Reset all progress?')){ localStorage.removeItem(SAVE_KEY); location.reload(); } }
-function exportProgress(){ const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'aplus-arcade-progress.json'; a.click(); URL.revokeObjectURL(url); }
 
-/*************
- * XP & LVLs *
- *************/
-function addXP(n){ state.xp = Math.max(0, state.xp + n); const newLevel = Math.floor(state.xp/200)+1; if(newLevel>state.level) toast('Level up! → LVL '+newLevel); state.level=newLevel; save(); }
+/* ==== Utils ==== */
+function $(q){ return document.querySelector(q); }
+function $all(q){ return Array.prototype.slice.call(document.querySelectorAll(q)); }
+function shuffle(arr){ return arr.map(function(v){ return [Math.random(),v]; }).sort(function(a,b){ return a[0]-b[0]; }).map(function(x){ return x[1]; }); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+/* ==== State ==== */
+var SAVE_KEY='aplus_arcade_v120x';
+var defaultState={xp:0,level:1,streak:0,bossWins:0,seen:{},correct:{},srs:{},settings:{teach:false},ach:{}};
+var state;
+try { state = JSON.parse(SafeStore.get(SAVE_KEY) || 'null') || defaultState; } catch(e){ state = defaultState; }
+function save(){ SafeStore.set(SAVE_KEY, JSON.stringify(state)); updateHeader(); }
+function updateHeader(){ $('#lvl').textContent=state.level; $('#xp').textContent=state.xp; $('#streak').textContent=state.streak; }
+function addXP(n){ state.xp=Math.max(0, state.xp+n); var lvl=Math.floor(state.xp/200)+1; state.level=lvl; save(); }
 function incStreak(){ state.streak++; save(); }
 function resetStreak(){ state.streak=0; save(); }
-function updateHeader(){ $('#lvl').textContent=state.level; $('#xp').textContent=state.xp; $('#streak').textContent=state.streak; }
 
-/****************
- * Content Data *
- ****************/
-const ITEMS = [];
-const MATCH_SETS = [];
+/* ==== Content ==== */
+var ITEMS=[], MATCH_SETS=[];
+function addMC(core,domain,prompt,choices,answerIndex,explain,tags){ ITEMS.push({id:uid(),core:core,domain:domain,type:'mc',prompt:prompt,choices:choices,answer:[answerIndex],explain:explain,tags:tags||[]}); }
+function addMulti(core,domain,prompt,choices,answerIndexes,explain,tags){ ITEMS.push({id:uid(),core:core,domain:domain,type:'multi',prompt:prompt,choices:choices,answer:answerIndexes,explain:explain,tags:tags||[]}); }
+function addType(core,domain,prompt,answers,explain,tags){ ITEMS.push({id:uid(),core:core,domain:domain,type:'type',prompt:prompt,answer:answers.map(function(s){return String(s).toLowerCase();}),explain:explain,tags:tags||[]}); }
 
-function addMC(core, domain, prompt, choices, answerIndex, explain, tags=[]) {
-  ITEMS.push({ id: uid(), core, domain, type:'mc', prompt, choices, answer:[answerIndex], explain, tags });
-}
-function addMulti(core, domain, prompt, choices, answerIndexes, explain, tags=[]) {
-  ITEMS.push({ id: uid(), core, domain, type:'multi', prompt, choices, answer:answerIndexes, explain, tags });
-}
-function addType(core, domain, prompt, answerStrings, explain, tags=[]) {
-  ITEMS.push({ id: uid(), core, domain, type:'type', prompt, answer:answerStrings.map(s=>s.toLowerCase()), explain, tags });
-}
-function addMatch(core, name, pairs){ MATCH_SETS.push({ id: uid(), core, name, pairs }); }
+addMC('1201','Networking','Which protocol and port are used for secure web traffic?',['HTTP on 80','HTTPS on 443','TLS on 995','SSH on 22'],1,'HTTPS typically uses TCP 443.',['ports']);
+addType('1202','Security','Write the secure alternative to Telnet.',['ssh'],'SSH replaces Telnet for encrypted remote terminal sessions.',['ports']);
+addMC('1201','Networking','802.11ac operates primarily in which band?',['2.4 GHz','5 GHz','900 MHz','Both 2.4 and 5 GHz'],1,'802.11ac is 5 GHz only.',['wifi']);
+addMC('1201','Hardware','Which printer uses an imaging drum and fuser?',['Laser','Inkjet','Thermal','Impact'],0,'Laser printers use toner, drum, transfer, and fuser.', ['printer']);
+addMulti('1201','Hardware','Select all display outputs.',['HDMI','DisplayPort','RJ-45','DVI-D'],[0,1,3],'RJ-45 is networking.');
 
-// ---- Seed sample content (trimmed) ----
-addMatch('1201','Ports ↔ Protocols', [['20/21','FTP'],['22','SSH'],['23','Telnet'],['25','SMTP'],['53','DNS'],['67/68','DHCP'],['80','HTTP'],['110','POP3'],['143','IMAP'],['123','NTP'],['161/162','SNMP'],['389','LDAP'],['443','HTTPS'],['445','SMB'],['548','AFP'],['3389','RDP']]);
-addMC('1201','Networking','Which protocol and port are used for secure web traffic?', ['HTTP on 80','HTTPS on 443','TLS on 995','SSH on 22'], 1, 'HTTPS typically uses TCP 443.', ['ports']);
-addType('1202','Security','Write the secure alternative to Telnet.', ['ssh'], 'SSH replaces Telnet for encrypted remote terminal sessions.', ['ports']);
-
-addMC('1201','Networking','802.11ac operates primarily in which band?', ['2.4 GHz','5 GHz','900 MHz','Both 2.4 and 5 GHz'], 1, '802.11ac is 5 GHz only.', ['wifi']);
-addMC('1201','Networking','Best 2.4 GHz channels to avoid overlap in NA?', ['1, 6, 11','2, 7, 12','3, 6, 9','4, 8, 13'], 0, 'Use non-overlapping channels 1, 6, 11.', ['wifi']);
-addMC('1201','Hardware','Which printer uses an imaging drum and fuser?', ['Laser','Inkjet','Thermal','Impact'], 0, 'Laser printers use toner, drum, transfer, and fuser stages.', ['printer']);
-
-// a few more to make it feel real
-addMC('1201','Hardware','Which RAID provides striping with parity?', ['RAID 0','RAID 1','RAID 5','RAID 10'], 2, 'RAID 5 = striping with distributed parity.', ['raid']);
-addType('1201','Networking','Default TCP port for SMB?', ['445'], 'SMB over TCP uses 445.', ['ports']);
-addMC('1202','Operating Systems','Where do you manage Windows services?', ['Device Manager','Services.msc','Control Panel > Programs','Task Scheduler'], 1, 'Services MMC or the Services snap-in.');
-addMC('1202','Security','Best SOHO Wi‑Fi security?', ['WEP','Open','MAC filtering only','WPA2/WPA3 + long passphrase'], 3, 'Use strong passphrases; avoid WEP/open.', ['wifi']);
-
-// WHY helpers
-const WHY_BY_DOMAIN = {
-  'Networking': 'Example: choosing the wrong port or protocol can block apps—e.g., opening 80 instead of 443 breaks secure sites.',
-  'Hardware': 'Example: an underpowered PSU can cause random reboots when the GPU is under load.',
-  'Operating Systems': 'Example: using Services.msc to restart a stuck service avoids rebooting a production PC.',
-  'Security': 'Example: weak Wi‑Fi security lets attackers onto your network.'
-};
-const WHY_BY_TAG = {
-  ports: 'Example: opening the wrong port on a firewall leaves the service unreachable (e.g., RDP uses 3389).',
-  wifi: 'Example: picking channels 1/6/11 on 2.4 GHz minimizes interference.',
-  raid: 'Example: a misconfigured RAID 5 can cause data loss and long rebuilds.',
-  printer: 'Example: knowing the fuser vs drum speeds up diagnostics.'
-};
-function whyFor(item){
-  if(item.why) return item.why;
-  if(item.tags && item.tags.length){ for(const t of item.tags){ if(WHY_BY_TAG[t]) return WHY_BY_TAG[t]; } }
-  return WHY_BY_DOMAIN[item.domain] || 'On the job, this prevents outages, speeds troubleshooting, and improves security.';
-}
-
-/****************
- * Learn (SM-2) *
- ****************/
+/* ==== Learn (SM-2) ==== */
 function sm2(item, quality){
-  if(!state.srs[item.id]) state.srs[item.id] = { ef:2.5, rep:0, ivl:0, due: Date.now() };
-  let {ef,rep,ivl} = state.srs[item.id];
-  if(quality < 3){ rep = 0; ivl = 1; } else {
-    if(rep === 0) ivl = 1; else if(rep === 1) ivl = 6; else ivl = Math.max(1, Math.round(ivl * ef));
-    rep += 1;
-    ef = ef + (0.1 - (5-quality)*(0.08 + (5-quality)*0.02));
-    if(ef < 1.3) ef = 1.3;
-  }
-  const next = Date.now() + ivl*24*60*60*1000 * (0.1 + Math.random()*0.15);
-  state.srs[item.id] = {ef,rep,ivl,due:next}; save();
+  if(!state.srs[item.id]) state.srs[item.id]={ef:2.5,rep:0,ivl:0,due:Date.now()};
+  var ef=state.srs[item.id].ef, rep=state.srs[item.id].rep, ivl=state.srs[item.id].ivl;
+  if(quality<3){ rep=0; ivl=1; } else { if(rep===0) ivl=1; else if(rep===1) ivl=6; else ivl=Math.max(1, Math.round(ivl*ef)); rep+=1; ef=ef+(0.1-(5-quality)*(0.08+(5-quality)*0.02)); if(ef<1.3) ef=1.3; }
+  var next = Date.now() + ivl*24*60*60*1000 * (0.1+Math.random()*0.15);
+  state.srs[item.id]={ef:ef,rep:rep,ivl:ivl,due:next}; save();
 }
 
-let learnQueue = [];
+var learnQueue=[];
 function startLearn(){
   state.settings.teach = !!$('#teachToggle').checked; save();
-  const raw = ($('#learnDomain').value || '').trim();
-  const filter = raw || 'all'; // <-- fallback if the select is somehow empty
-  const now = Date.now();
-
-  // Build pool for the chosen domain (or all)
-  let pool = ITEMS.filter(i => (filter==='all' || `${i.core} · ${i.domain}`===filter));
-  if(pool.length===0) pool = ITEMS.slice(); // fallback to all if domain mismatch
-
-  // Grab due cards first; if none due, show a fresh slice so Learn always loads
-  let due = pool.filter(i => ((state.srs[i.id]?.due)||0) <= now);
-  if(due.length===0) due = pool.slice();
-
-  learnQueue = shuffle(due).slice(0, 30);
-
-  if(learnQueue.length===0){
-    $('#learnArea').innerHTML = '<div class="center muted">No content loaded. Try importing a pack from Home → Import.</div>';
-    return;
-  }
-
-  if(state.settings.teach){ nextTeachCard(); } else { nextLearnCard(); }
+  var filter = ($('#learnDomain').value||'all');
+  var now = Date.now();
+  var pool = ITEMS.filter(function(i){ return filter==='all' || (i.core+' · '+i.domain)===filter; });
+  if(!pool.length) pool = ITEMS.slice();
+  var due = pool.filter(function(i){ return ((state.srs[i.id] && state.srs[i.id].due) || 0) <= now; });
+  if(!due.length) due = pool.slice();
+  learnQueue = shuffle(due).slice(0,30);
+  if(!learnQueue.length){ $('#learnArea').innerHTML='<div class="center muted">No content. Import a pack.</div>'; return; }
+  if(state.settings.teach) nextTeachCard(); else nextLearnCard();
 }
-
 function nextLearnCard(){
-  const item = learnQueue.shift();
-  if(!item){ $('#learnArea').innerHTML='<div class="center ok">Nice! No more cards.</div>'; return; }
-  renderItem('#learnArea', item, (correct,quality=correct?5:2)=>{
-    try{ sm2(item, quality); }catch(e){ console.warn('SRS skipped', e); }
-    state.seen[item.id]=(state.seen[item.id]||0)+1; if(correct) state.correct[item.id]=(state.correct[item.id]||0)+1; save();
-    nextLearnCard();
-  }, false, {mode:'learn'});
+  var item = learnQueue.shift();
+  if(!item){ $('#learnArea').innerHTML='<div class="center">Done!</div>'; return; }
+  renderItem('#learnArea', item, function(ok,quality){ try{ sm2(item, quality|| (ok?5:2)); }catch(e){}; state.seen[item.id]=(state.seen[item.id]||0)+1; if(ok) state.correct[item.id]=(state.correct[item.id]||0)+1; save(); nextLearnCard(); }, false, {mode:'learn'});
 }
-
-/* ---- Teach Mode (concept cards) ---- */
 function nextTeachCard(){
-  const item = learnQueue.shift();
-  if(!item){ $('#learnArea').innerHTML='<div class="center ok">Nice! No more cards in Teach Mode.</div>'; return; }
-  renderTeachCard('#learnArea', item, (quality=4)=>{
-    try{ sm2(item, quality); }catch(e){}
-    state.seen[item.id]=(state.seen[item.id]||0)+1; save();
-    nextTeachCard();
-  });
+  var item = learnQueue.shift();
+  if(!item){ $('#learnArea').innerHTML='<div class="center">Done!</div>'; return; }
+  renderTeachCard('#learnArea', item, function(q){ try{ sm2(item, q||4);}catch(e){}; state.seen[item.id]=(state.seen[item.id]||0)+1; save(); nextTeachCard(); });
 }
-
-function renderTeachCard(selector, item, onDone){
-  const host = $(selector); host.innerHTML='';
-  const card = document.createElement('div'); card.className='inset';
-
-  const ansText = (()=>{
-    if(item.type==='mc' || item.type==='multi'){
-      const idxs = Array.isArray(item.answer) ? item.answer.map(n=>Number(n)) : [];
-      return idxs.map(i=>`${String.fromCharCode(65+i)}. ${item.choices?.[i]??''}`).join(' · ');
-    } else if(item.type==='type'){ return (item.answer||[]).join(', '); }
-    return '';
-  })();
-
-  card.innerHTML = `
-    <div class='row small muted'>
-      <span class='pill'>${item.core||''}</span>
-      <span class='pill'>${item.domain||''}</span>
-      <span class='spacer'></span>
-      <span class='pill'>Teach</span>
-    </div>
-    <div class='question' style='margin-top:6px;'><strong>${item.prompt||'Concept'}</strong></div>
-    <div class='answer' style='margin-top:10px;'>
-      ${ansText ? `<div class='small muted'>Correct answer(s): <strong>${ansText}</strong></div>`:''}
-      ${item.explain ? `<div style='margin-top:6px;'>${item.explain}</div>`:''}
-      <div style='margin-top:8px;'><strong>Why it matters:</strong> ${whyFor(item)}</div>
-    </div>
-    <div class='controls' style='margin-top:12px;'>
-      <button class='btn' id='teachGot'>Got it</button>
-      <button class='btn secondary' id='teachReview'>Need review</button>
-    </div>
-  `;
+function renderTeachCard(sel, item, onDone){
+  var host=$(sel); host.innerHTML='';
+  var card=document.createElement('div'); card.className='inset';
+  var ansText='';
+  if(item.type==='mc' || item.type==='multi'){
+    var idxs = Array.isArray(item.answer) ? item.answer.map(function(n){return Number(n);}) : [];
+    ansText = idxs.map(function(i){ return String.fromCharCode(65+i)+'. '+((item.choices && item.choices[i]) || ''); }).join(' · ');
+  } else if(item.type==='type'){ ansText=(item.answer||[]).join(', '); }
+  card.innerHTML = "<div class='row small muted'><span class='pill'>"+(item.core||'')+"</span><span class='pill'>"+(item.domain||'')+
+    "</span><span class='spacer'></span><span class='pill'>Teach</span></div>"+
+    "<div class='question' style='margin-top:6px;'><strong>"+(item.prompt||'')+"</strong></div>"+
+    "<div class='answer' style='margin-top:10px;'>"+
+    (ansText? "<div class='small muted'>Correct answer(s): <strong>"+ansText+"</strong></div>": "")+
+    (item.explain? "<div style='margin-top:6px;'>"+item.explain+"</div>": "")+
+    "<div style='margin-top:8px;'><strong>Why it matters:</strong> "+whyFor(item)+"</div></div>"+
+    "<div class='controls' style='margin-top:12px;'><button class='btn' id='teachGot'>Got it</button><button class='btn secondary' id='teachReview'>Need review</button></div>";
   host.appendChild(card);
-  $('#teachGot').onclick = ()=> onDone && onDone(4);
-  $('#teachReview').onclick = ()=> onDone && onDone(2);
+  $('#teachGot').onclick=function(){ onDone && onDone(4); };
+  $('#teachReview').onclick=function(){ onDone && onDone(2); };
 }
 
-/********************
- * Render Question   *
- ********************/
-function renderItem(selector, item, onDone, compact=false, opts={}){
-  const host = $(selector); if(!host) return; host.innerHTML = '';
+/* ==== Render Item ==== */
+function whyFor(item){
+  var WHY_BY_DOMAIN={'Networking':'Example: choosing the wrong port can block apps.','Hardware':'Example: underpowered PSU causes reboots.','Operating Systems':'Example: restart a stuck service without reboot.','Security':'Example: weak Wi-Fi lets attackers in.'};
+  var WHY_BY_TAG={ports:'Example: wrong firewall port leaves service unreachable.',wifi:'Example: 1/6/11 reduce interference.'};
+  if(item.why) return item.why;
+  if(item.tags){ for(var i=0;i<item.tags.length;i++){ var t=item.tags[i]; if(WHY_BY_TAG[t]) return WHY_BY_TAG[t]; } }
+  return WHY_BY_DOMAIN[item.domain]||'Prevents outages and speeds troubleshooting.';
+}
 
-  const ansIndexes = () => {
+function renderItem(sel, item, onDone, compact, opts){
+  var host=$(sel); if(!host) return; host.innerHTML='';
+  opts = opts||{}; compact=!!compact;
+
+  function ansIndexes(){
     if(item.type==='mc' || item.type==='multi'){
-      if(Array.isArray(item.answer)) return item.answer.map(n=>Number(n));
+      if(Array.isArray(item.answer)) return item.answer.map(function(n){return Number(n);});
       if(typeof item.answer==='number') return [item.answer];
       return [0];
     }
     return [];
-  };
-  const ansText = () => {
+  }
+  function ansText(){
     if(item.type==='mc' || item.type==='multi'){
-      const idxs = ansIndexes();
-      return idxs.map(i=>`${String.fromCharCode(65 + i)}. ${item.choices?.[i] ?? ''}`.trim()).join(' · ');
+      var idxs = ansIndexes();
+      return idxs.map(function(i){ return String.fromCharCode(65+i)+'. '+((item.choices && item.choices[i]) || ''); }).join(' · ');
     }
     if(item.type==='type'){ return (item.answer||[]).join(', '); }
     return '';
-  };
+  }
 
-  const card=document.createElement('div'); card.className='inset';
-  const meta = `<div class='row small muted'><span class='pill'>${item.core||''}</span><span class='pill'>${item.domain||''}</span><span class='spacer'></span><span class='pill'>${(item.type||'mc').toUpperCase()}</span></div>`;
-  const q = document.createElement('div'); q.className='question'; q.innerHTML = meta + `<div style='margin-top:6px;'>${item.prompt||''}</div>`; card.appendChild(q);
+  var card=document.createElement('div'); card.className='inset';
+  var meta = "<div class='row small muted'><span class='pill'>"+(item.core||'')+"</span><span class='pill'>"+(item.domain||'')+"</span><span class='spacer'></span><span class='pill'>"+(item.type||'mc').toUpperCase()+"</span></div>";
+  var q=document.createElement('div'); q.className='question'; q.innerHTML = meta + "<div style='margin-top:6px;'>"+(item.prompt||'')+"</div>"; card.appendChild(q);
+  var answerDiv=document.createElement('div'); answerDiv.className='answer hidden'; var advanced=false;
 
-  const answerDiv = document.createElement('div'); answerDiv.className='answer hidden';
-  let advanced=false;
-
-  function showReview(correct, userValue=''){
-    const whyHTML = (opts.mode==='learn') ? `<div style='margin-top:8px;'><strong>Why it matters:</strong> ${whyFor(item)}</div>` : '';
-    const explHTML = (opts.mode==='learn' && item.explain) ? `<div class='small' style='margin-top:6px;'>${item.explain}</div>` : '';
-    const corrHTML = `<div class='small muted' style='margin-top:6px;'>Correct answer(s): <strong>${ansText()}</strong></div>`;
-    const youHTML  = (item.type==='type' && userValue) ? `<div class='small muted'>Your answer: <em>${userValue}</em></div>` : '';
-
-    answerDiv.innerHTML =
-      `<div class="verdict ${correct?'ok':'bad'}">${correct?'✅ Correct!':'❌ Incorrect'}</div>` +
-      youHTML + corrHTML + explHTML + whyHTML;
-
+  function showReview(correct, userValue){
+    userValue = userValue||'';
+    var whyHTML = (opts.mode==='learn')? "<div style='margin-top:8px;'><strong>Why it matters:</strong> "+whyFor(item)+"</div>" : "";
+    var explHTML = (opts.mode==='learn' && item.explain)? "<div class='small' style='margin-top:6px;'>"+item.explain+"</div>" : "";
+    var corrHTML = "<div class='small muted' style='margin-top:6px;'>Correct answer(s): <strong>"+ansText()+"</strong></div>";
+    var youHTML = (item.type==='type' && userValue)? "<div class='small muted'>Your answer: <em>"+userValue+"</em></div>" : "";
+    answerDiv.innerHTML = "<div class='verdict "+(correct?'ok':'bad')+"'>"+(correct?'✅ Correct!':'❌ Incorrect')+"</div>"+youHTML+corrHTML+explHTML+whyHTML;
     answerDiv.classList.remove('hidden'); card.appendChild(answerDiv);
-
     if(opts.mode==='learn'){
-      const nextBtn = document.createElement('button'); nextBtn.className='btn'; nextBtn.textContent='Next'; nextBtn.style.marginTop='10px';
-      nextBtn.onclick=()=>{ if(advanced) return; advanced=true; try{ onDone && onDone(correct, correct?5:2); }catch(e){ onDone && onDone(true,3);} };
+      var nextBtn=document.createElement('button'); nextBtn.className='btn'; nextBtn.textContent='Next'; nextBtn.style.marginTop='10px';
+      nextBtn.onclick=function(){ if(advanced) return; advanced=true; try{ onDone && onDone(correct, correct?5:2); }catch(e){} };
       answerDiv.appendChild(nextBtn);
     } else {
-      // Quiz/Boss/Exam: brief pause to read verdict then advance
-      setTimeout(()=>{ if(advanced) return; advanced=true; try{ onDone && onDone(correct, correct?5:2); }catch(e){}; }, 1000);
+      setTimeout(function(){ if(advanced) return; advanced=true; try{ onDone && onDone(correct, correct?5:2); }catch(e){}; }, 1000);
     }
   }
 
   if(item.type==='type'){
-    const inp=document.createElement('input'); inp.type='text'; inp.placeholder='Type your answer'; inp.style.width='100%'; inp.style.padding='10px'; inp.style.borderRadius='10px'; inp.style.border='1px solid #2a2f58'; inp.style.background='#0f152f'; inp.style.color='var(--text)';
-    const submit=document.createElement('button'); submit.className='btn'; submit.textContent='Check'; submit.style.marginTop='10px';
-    submit.onclick=()=>{
-      state.seen[item.id]=(state.seen[item.id]||0)+1;
-      const v=(inp.value||'').trim().toLowerCase();
-      const ok = (item.answer||[]).some(a=> String(a).toLowerCase()===v);
-      inp.style.borderColor = ok?'#1fbf8f':'#d34b4b';
-      showReview(ok, v);
-    };
-    card.append(inp); card.append(submit); host.appendChild(card); return;
+    var inp=document.createElement('input'); inp.type='text'; inp.placeholder='Type your answer'; inp.style.width='100%'; inp.style.padding='10px'; inp.style.borderRadius='10px'; inp.style.border='1px solid #2a2f58'; inp.style.background='#0f152f'; inp.style.color='white';
+    var submit=document.createElement('button'); submit.className='btn'; submit.textContent='Check'; submit.style.marginTop='10px';
+    submit.onclick=function(){ state.seen[item.id]=(state.seen[item.id]||0)+1; var v=(inp.value||'').trim().toLowerCase(); var ok=(item.answer||[]).some(function(a){ return String(a).toLowerCase()===v; }); inp.style.borderColor=ok?'#1fbf8f':'#d34b4b'; showReview(ok,v); };
+    card.appendChild(inp); card.appendChild(submit); host.appendChild(card); return;
   }
 
-  // MC / MULTI
-  const choices = document.createElement('div'); choices.className='choices';
-  (item.choices||[]).forEach((c,idx)=>{
-    const btn=document.createElement('button'); btn.className='choice'; btn.textContent=c;
-    btn.onclick=()=>{
+  var choices=document.createElement('div'); choices.className='choices';
+  (item.choices||[]).forEach(function(c,idx){
+    var btn=document.createElement('button'); btn.className='choice'; btn.textContent=c;
+    btn.onclick=function(){
       state.seen[item.id]=(state.seen[item.id]||0)+1;
       if(item.type==='mc'){
-        const correctIndex = ansIndexes()[0] ?? 0;
-        Array.from(choices.children).forEach((o,i)=>{ o.disabled=true; if(i===correctIndex) o.classList.add('correct'); });
+        var correctIndex = ansIndexes()[0] || 0;
+        Array.prototype.slice.call(choices.children).forEach(function(o,i){ o.disabled=true; if(i===correctIndex) o.classList.add('correct'); });
         if(idx!==correctIndex) btn.classList.add('wrong');
         showReview(idx===correctIndex);
       } else {
@@ -489,15 +296,15 @@ function renderItem(selector, item, onDone, compact=false, opts={}){
   card.appendChild(choices);
 
   if(item.type==='multi'){
-    const submit = document.createElement('button'); submit.className='btn'; submit.textContent='Submit'; submit.style.marginTop='10px';
-    submit.onclick=()=>{
-      const picks = Array.from(choices.children).map((b,i)=> b.classList.contains('picked')?i:-1).filter(i=>i>-1);
-      const ans = ansIndexes();
-      const ok = picks.length && picks.length===ans.length && picks.every(i=> ans.includes(i));
-      Array.from(choices.children).forEach((o,i)=>{
+    var submit=document.createElement('button'); submit.className='btn'; submit.textContent='Submit'; submit.style.marginTop='10px';
+    submit.onclick=function(){
+      var picks = Array.prototype.slice.call(choices.children).map(function(b,i){ return b.classList.contains('picked')?i:-1; }).filter(function(i){ return i>-1; });
+      var ans = ansIndexes();
+      var ok = picks.length && picks.length===ans.length && picks.every(function(i){ return ans.indexOf(i)>-1; });
+      Array.prototype.slice.call(choices.children).forEach(function(o,i){
         o.disabled=true;
-        if(ans.includes(i)) o.classList.add('correct');
-        if(picks.includes(i) && !ans.includes(i)) o.classList.add('wrong');
+        if(ans.indexOf(i)>-1) o.classList.add('correct');
+        if(picks.indexOf(i)>-1 && ans.indexOf(i)===-1) o.classList.add('wrong');
       });
       showReview(ok);
     };
@@ -507,118 +314,45 @@ function renderItem(selector, item, onDone, compact=false, opts={}){
   host.appendChild(card);
 }
 
-/********
- * Quiz *
- ********/
-let quizDeck = [], quizCorrect=0, quizTotal=0;
+/* ==== Quiz ==== */
+var quizDeck=[], quizCorrect=0, quizTotal=0;
 function startQuiz(){
-  const filter = $('#quizDomain').value || 'all';
-  const count = parseInt($('#quizCount').value,10) || 10;
-  const pool = shuffle(ITEMS.filter(i=> filter==='all' || `${i.core} · ${i.domain}`===filter));
-  quizDeck = pool.slice(0, count); quizCorrect=0; quizTotal=count; renderQuizNext();
+  var filter = $('#quizDomain').value || 'all';
+  var count = parseInt($('#quizCount').value,10) || 10;
+  var pool = shuffle(ITEMS.filter(function(i){ return filter==='all' || (i.core+' · '+i.domain)===filter; }));
+  quizDeck = pool.slice(0,count); quizCorrect=0; quizTotal=count; renderQuizNext();
 }
 function renderQuizNext(){
-  const item = quizDeck.shift();
-  if(!item){
-    $('#quizArea').innerHTML = `<div class="center"><div>Score: <strong>${quizCorrect}/${quizTotal}</strong></div><div class="controls" style="margin-top:10px"><button class="btn" onclick="startQuiz()">Play again</button></div></div>`;
-    return;
-  }
-  renderItem('#quizArea', item, (correct)=>{
-    if(correct){ quizCorrect++; addXP(10); incStreak(); } else { addXP(-3); resetStreak(); }
-    renderQuizNext();
-  }, false, {mode:'quiz'});
+  var item = quizDeck.shift();
+  if(!item){ $('#quizArea').innerHTML="<div class='center'><div>Score: <strong>"+quizCorrect+"/"+quizTotal+"</strong></div><div class='controls' style='margin-top:10px'><button class='btn' onclick='startQuiz()'>Play again</button></div></div>"; return; }
+  renderItem('#quizArea', item, function(ok){ if(ok){ quizCorrect++; addXP(10); incStreak(); } else { addXP(-3); resetStreak(); } renderQuizNext(); }, false, {mode:'quiz'});
 }
 
-/*********
- * Match *
- *********/
-function startMatch(){
-  const id = $('#matchSet').value; const set = MATCH_SETS.find(m=>m.id===id);
-  if(!set){ $('#matchArea').innerHTML = '<div class="center muted">No set.</div>'; return; }
-  $('#matchArea').innerHTML = '<div class="center muted">Drag/drop matching UI available in the fuller build. Import more sets via Home.</div>';
-}
-
-/***************
- * Boss Battles *
- ***************/
-function startBoss(){
-  const filter = $('#bossDomain').value || 'all';
-  const pool = shuffle(ITEMS.filter(i=> filter==='all' || `${i.core} · ${i.domain}`===filter));
-  const deck = pool.slice(0,10); let correct=0; let idx=0; let time=60; const host = $('#bossArea');
-  function tick(){ if(--time<=0){ end(); } timer.textContent = time+'s'; }
-  function end(){
-    clearInterval(t);
-    const pct = Math.round((correct/10)*100); const win = pct>=80;
-    if(win) { addXP(50); state.bossWins++; } else { addXP(5); }
-    save();
-    host.innerHTML = `<div class='center'><div>Score: <strong>${pct}%</strong> ${win?"<span class='ok'>(WIN)</span>":"<span class='bad'>(LOSE)</span>"}</div><div class='controls' style='margin-top:10px'><button class='btn' onclick='startBoss()'>Rematch</button></div></div>`;
-  }
-  host.innerHTML = '';
-  const header=document.createElement('div'); header.className='row'; const timer=document.createElement('div'); timer.className='timer pill'; timer.textContent='60s'; header.appendChild(timer); host.appendChild(header);
-  const t=setInterval(tick,1000);
-  function next(){
-    const item = deck[idx++]; if(!item){ end(); return; }
-    renderItem('#bossArea', item, (ok)=>{ if(ok){ correct++; addXP(8); incStreak(); } else { addXP(-3); resetStreak(); } next(); }, true, {mode:'boss'});
-  }
-  next();
-}
-
-/*******************
- * Exam Simulator   *
- *******************/
+/* ==== Exam ==== */
 function startExam(){
-  const host = $('#examArea'); const minutes = 90; let time = minutes*60;
-  const pool = shuffle(ITEMS).slice(0, Math.min(90, ITEMS.length));
-  if(pool.length<30){ host.innerHTML = '<div class="notice">Import a larger pack for a true exam-length simulation.</div>'; }
-  let correct=0, idx=0;
-  function tick(){ time--; if(time<=0){ finish(); } timer.textContent = Math.floor(time/60)+":"+String(time%60).padStart(2,'0'); }
-  function finish(){
-    clearInterval(t);
-    const pct = Math.round((correct/Math.max(1,pool.length))*100);
-    const pass = pct >= 75;
-    host.innerHTML = `<div class='center'><div>Exam Complete — Score: <strong>${pct}%</strong> ${pass?"<span class='ok'>(PASS)</span>":"<span class='bad'>(FAIL)</span>"}</div><div class='controls' style='margin-top:10px'><button class='btn' onclick='startExam()'>Retry</button></div></div>`;
-  }
-  host.innerHTML = '';
-  const header=document.createElement('div'); header.className='row'; const timer=document.createElement('div'); timer.className='timer pill'; header.append('Time ', timer); host.appendChild(header);
-  const t=setInterval(tick,1000);
-  function next(){
-    const item = pool[idx++]; if(!item){ finish(); return; }
-    renderItem('#examArea', item, (ok)=>{ if(ok){ correct++; addXP(5);} else { addXP(-1);} next(); }, false, {mode:'exam'});
-  }
+  var host=$('#examArea'); var minutes=90; var time=minutes*60;
+  var pool=shuffle(ITEMS).slice(0, Math.min(90, ITEMS.length)); var correct=0, idx=0;
+  host.innerHTML=''; var header=document.createElement('div'); header.className='row'; var timer=document.createElement('div'); timer.className='timer pill'; timer.textContent='90:00'; header.appendChild(timer); host.appendChild(header);
+  var t=setInterval(function(){ time--; if(time<=0){ finish(); } var m=Math.floor(time/60), s=String(time%60).padStart?String(time%60).padStart(2,'0'):('0'+(time%60)).slice(-2); timer.textContent=m+":"+s; },1000);
+  function finish(){ clearInterval(t); var pct=Math.round((correct/Math.max(1,pool.length))*100); var pass=pct>=75; host.innerHTML="<div class='center'><div>Exam Complete — Score: <strong>"+pct+"%</strong> "+(pass?"<span class='ok'>(PASS)</span>":"<span class='bad'>(FAIL)</span>")+"</div><div class='controls' style='margin-top:10px'><button class='btn' onclick='startExam()'>Retry</button></div></div>"; }
+  function next(){ var item=pool[idx++]; if(!item){ finish(); return; } renderItem('#examArea', item, function(ok){ if(ok){ correct++; addXP(5);} else { addXP(-1);} next(); }, false, {mode:'exam'}); }
   next();
 }
 
-/***********************
- * Mode & Dropdown init *
- ***********************/
+/* ==== Mode & Domains ==== */
 function gotoMode(mode){
-  $$('.mode-tab').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
-  ['home','learn','quiz','match','boss','exam'].forEach(id=>$('#'+id).classList.toggle('hidden', id!==mode));
+  ['learn','quiz','exam'].forEach(function(id){ $('#'+id).classList.toggle('hidden', id!==mode); });
 }
-
 function fillDomains(){
-  const domains = [...new Set(ITEMS.map(i=>`${i.core} · ${i.domain}`))].sort();
-  const put = el => { el.innerHTML = `<option value="all">All Domains</option>` + domains.map(d=>`<option>${d}</option>`).join(''); };
-  put($('#learnDomain')); put($('#quizDomain')); put($('#bossDomain'));
-  $('#matchSet').innerHTML = MATCH_SETS.map((m)=>`<option value="${m.id}">${m.core} · ${m.name}</option>`).join('');
+  var domains = [];
+  ITEMS.forEach(function(i){ var key=i.core+' · '+i.domain; if(domains.indexOf(key)===-1) domains.push(key); });
+  domains.sort();
+  function put(el){ var html = "<option value='all'>All Domains</option>"+domains.map(function(d){ return "<option>"+d+"</option>"; }).join(''); el.innerHTML=html; }
+  put($('#learnDomain')); put($('#quizDomain'));
   $('#teachToggle').checked = !!state.settings.teach;
 }
 
-/*****************
- * Toast helper  *
- *****************/
-let toastTimer=null; function toast(msg){
-  clearTimeout(toastTimer);
-  let t = $('#toast'); if(!t){ t=document.createElement('div'); t.id='toast'; t.style.position='fixed'; t.style.bottom='20px'; t.style.left='50%'; t.style.transform='translateX(-50%)'; t.style.background='#0b122a'; t.style.border='1px solid #2a2f58'; t.style.borderRadius='12px'; t.style.padding='10px 14px'; t.style.zIndex='99'; t.style.boxShadow='0 10px 30px rgba(0,0,0,.35)'; document.body.appendChild(t);} t.textContent=msg; t.style.opacity='1'; toastTimer=setTimeout(()=>{ t.style.opacity='0'; }, 2000);
-}
-
-/**************
- * Initialize  *
- **************/
-function init(){
-  $$('.mode-tab').forEach(btn=>btn.addEventListener('click', ()=>gotoMode(btn.dataset.mode)));
-  fillDomains(); updateHeader();
-}
+function init(){ fillDomains(); updateHeader(); }
 init();
 </script>
 </body>
