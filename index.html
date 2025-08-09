@@ -16,6 +16,26 @@
     --danger: #ff6b6b;
     --warn: #ffd166;
     --ok: #06d6a0;
+    /* Brighten the Learn/Review answer text */
+.answer { color: #fff; }
+
+/* The "Correct answer(s): ..." line was using .muted — override it here */
+.answer .muted { color: #fff; opacity: .9; }
+
+/* (Optional) if any nested spans inherit muted colors from elsewhere */
+.answer * { color: inherit; }
+
+   /* Force selects and their options to use dark text on light bg */
+select.btn,
+select.btn option { color:#000 !important; }
+
+select.btn { background:#fff !important; border-color:#c7cbe6; }
+
+/* Try to keep hovered/selected options readable (support varies by browser/OS) */
+select.btn option:checked,
+select.btn option:hover { color:#000; background:#cfe0ff; }
+ 
+
   }
   * { box-sizing:border-box; }
   body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial; background:linear-gradient(180deg, #0d1020, #171a2b 45%, #0d1020); color:var(--text); }
