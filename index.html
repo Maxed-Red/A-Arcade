@@ -124,41 +124,9 @@
             <button class="btn ghost" onclick="gotoMode('exam')">Full Exam Sim</button>
           </div>
           <div class="notice" style="margin-top:10px;">
-            <strong>Heads-up:</strong> This build aligns to the latest 220-1201/1202 objectives. Content packs can be imported to expand the bank. Check <em>Objectives</em> for coverage.
+            <strong>Heads-up:</strong> Import content packs any time via Home → Import. Learn will always give feedback; Quiz/Boss/Exam show quick ✅/❌ overlays.
           </div>
         </div>
-        <div class="card">
-          <h3>Coverage</h3>
-          <div class="row">
-            <div style="width:100%">
-              <div class="row"><span class="pill">1201 · Core 1</span><span class="spacer"></span><span class="small muted">Mobile · Networking · Hardware · Virt/Cloud · H/W & Net Troubleshooting</span></div>
-              <progress id="cov1201" value="0" max="100"></progress>
-            </div>
-          </div>
-          <div class="row" style="margin-top:10px;">
-            <div style="width:100%">
-              <div class="row"><span class="pill">1202 · Core 2</span><span class="spacer"></span><span class="small muted">OS · Security · Software Troubleshooting · Operational Procedures</span></div>
-              <progress id="cov1202" value="0" max="100"></progress>
-            </div>
-          </div>
-          <p class="small muted" style="margin-top:8px;">Coverage % = items studied in each core / total items available.</p>
-        </div>
-        <div class="card">
-          <h3>Import / Export</h3>
-          <p class="muted">Bring in new question packs (JSON) or export your progress.</p>
-          <div class="controls">
-            <label class="btn" for="fileIn">Import JSON</label>
-            <input id="fileIn" class="sr-only" type="file" accept="application/json" />
-            <button class="btn secondary" onclick="exportProgress()">Export Progress</button>
-            <button class="btn ghost" onclick="resetProgress()">Reset</button>
-          </div>
-          <p class="small muted">Schema documented under <em>Profile → Data Schema</em>.</p>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:12px;">
-        <h3>Achievements</h3>
-        <div id="achievements" class="grid"></div>
       </div>
     </section>
 
@@ -238,47 +206,6 @@
       </div>
     </section>
 
-    <!-- OBJECTIVES -->
-    <section id="objectives" class="hidden">
-      <div class="card">
-        <h3>Official Objective Map</h3>
-        <p class="muted">Aligned to 220-1201 and 220-1202 official objectives. Use this as a checklist. (See <em>Profile → Sources</em> for official PDFs.)</p>
-        <div id="objList" class="grid"></div>
-      </div>
-    </section>
-
-    <!-- PROFILE -->
-    <section id="profile" class="hidden">
-      <div class="grid">
-        <div class="card">
-          <h3>Player</h3>
-          <ul class="list">
-            <li>Level: <strong id="pLevel">1</strong></li>
-            <li>XP: <strong id="pXP">0</strong></li>
-            <li>Streak: <strong id="pStreak">0</strong></li>
-            <li>Boss Wins: <strong id="pBossWins">0</strong></li>
-          </ul>
-        </div>
-        <div class="card">
-          <h3>Data Schema</h3>
-          <pre class="small muted" style="white-space:pre-wrap">
-Item { id, core:"1201|1202", domain:"Networking|Hardware|...", sub:"", type:"mc|multi|type|match|pbq", prompt, choices:["A","B",...], answer:[indexes or strings], explain, why, tags:["ports","wifi"], srs:{ef, rep, ivl, due}}
-MatchSet { id, core, name, pairs:[[left,right], ...] }
-          </pre>
-          <p class="small muted">Import JSON with { items:[Item,...], matchSets:[MatchSet,...] }.</p>
-        </div>
-        <div class="card">
-          <h3>Sources</h3>
-          <ul class="list">
-            <li>CompTIA A+ 220-1201 Objectives (PDF)</li>
-            <li>CompTIA A+ 220-1202 Objectives (PDF)</li>
-            <li>Exam structure & scoring (public info)</li>
-          </ul>
-          <p class="small muted">This is an unofficial study tool. Always verify with the official objectives.</p>
-        </div>
-      </div>
-    </section>
-
   </main>
 
 <script>
@@ -287,282 +214,76 @@ MatchSet { id, core, name, pairs:[[left,right], ...] }
  ********************/
 const $ = (q) => document.querySelector(q);
 const $$ = (q) => Array.from(document.querySelectorAll(q));
-const rnd = (n) => Math.floor(Math.random()*n);
 const shuffle = (arr) => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
 const uid = () => Math.random().toString(36).slice(2,9);
 
 const SAVE_KEY = 'aplus_arcade_v120x';
 let state = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null') || {
   xp: 0, level:1, streak:0, bossWins:0,
-  seen: {}, // id -> attempts
-  correct: {}, // id -> correct count
-  srs: {}, // id -> {ef,rep,ivl,due}
+  seen: {}, correct: {}, srs: {},
   settings: { teach:false },
-  // achievements flags
   ach: { streak10:false, ports50:false, osPerfect:false, examPass:false }
 };
-function save(){ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); updateHeader(); renderAchievements(); }
-function resetProgress(){ if(confirm('Reset all progress?')){ localStorage.removeItem(SAVE_KEY); state = {xp:0,level:1,streak:0,bossWins:0,seen:{},correct:{},srs:{},settings:{teach:false},ach:{streak10:false,ports50:false,osPerfect:false,examPass:false}}; save(); alert('Progress cleared.'); } }
+function save(){ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); updateHeader(); }
+function resetProgress(){ if(confirm('Reset all progress?')){ localStorage.removeItem(SAVE_KEY); location.reload(); } }
 function exportProgress(){ const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'aplus-arcade-progress.json'; a.click(); URL.revokeObjectURL(url); }
-
-/****************
- * Content Data *
- ****************/
-// NOTE: This starter bank is intentionally compact to keep the file size reasonable.
-// You can IMPORT larger packs from the Home → Import button.
-
-const ITEMS = [];
-const MATCH_SETS = [];
-const OBJ = [
-  { core:'1201', domain:'Mobile Devices', bullets:[
-    'Install & configure laptop hardware/components',
-    'Mobile device accessories & ports',
-    'Mobile device synchronization methods']},
-  { core:'1201', domain:'Networking', bullets:[
-    'SOHO network types & features', 'Common ports & protocols', 'Wireless standards & encryption', 'Network devices & tools']},
-  { core:'1201', domain:'Hardware', bullets:[
-    'Cables & connectors', 'Power supplies & motherboards', 'RAM & storage', 'Peripherals & printers']},
-  { core:'1201', domain:'Virtualization & Cloud', bullets:[
-    'Client-side virtualization', 'Cloud models & services', 'Thin/Thick provisioning basics']},
-  { core:'1201', domain:'Hardware/Network Troubleshooting', bullets:[
-    'Troubleshooting methodology', 'Common hardware failures', 'Network troubleshooting tools & commands']},
-  { core:'1202', domain:'Operating Systems', bullets:[
-    'Windows editions, features, install/upgrade', 'macOS & Linux basics', 'Command-line tools', 'System utilities']},
-  { core:'1202', domain:'Security', bullets:[
-    'Threats & vulnerabilities', 'Secure protocols', 'Authentication & permissions', 'Wireless security & hardening']},
-  { core:'1202', domain:'Software Troubleshooting', bullets:[
-    'OS & application errors', 'Mobile OS issues', 'Malware symptoms & removal']},
-  { core:'1202', domain:'Operational Procedures', bullets:[
-    'Safety & environmental impacts', 'Communication & professionalism', 'Change management & documentation', 'SLA, licensing, and incident response basics']},
-];
-
-// === Helper to add MC items quickly
-function addMC(core, domain, prompt, choices, answerIndex, explain, tags=[]) {
-  ITEMS.push({ id: uid(), core, domain, type:'mc', prompt, choices, answer:[answerIndex], explain, tags });
-}
-// === Helper to add multi-answer
-function addMulti(core, domain, prompt, choices, answerIndexes, explain, tags=[]) {
-  ITEMS.push({ id: uid(), core, domain, type:'multi', prompt, choices, answer:answerIndexes, explain, tags });
-}
-// === Type-in items
-function addType(core, domain, prompt, answerStrings, explain, tags=[]) {
-  ITEMS.push({ id: uid(), core, domain, type:'type', prompt, answer:answerStrings.map(s=>s.toLowerCase()), explain, tags });
-}
-// === Matching set
-function addMatch(core, name, pairs){ MATCH_SETS.push({ id: uid(), core, name, pairs }); }
-
-// --- Seed content (concise but broad)
-// Ports & Protocols
-addMatch('1201','Ports ↔ Protocols', [
-  ['20/21','FTP'],['22','SSH'],['23','Telnet'],['25','SMTP'],['53','DNS'],['67/68','DHCP'],['80','HTTP'],['110','POP3'],['143','IMAP'],['123','NTP'],['161/162','SNMP'],['389','LDAP'],['443','HTTPS'],['445','SMB'],['548','AFP'],['3389','RDP']
-]);
-addMC('1201','Networking','Which protocol and port are used for secure web traffic?', ['HTTP on 80','HTTPS on 443','TLS on 995','SSH on 22'], 1, 'HTTPS typically uses TCP 443.', ['ports']);
-addType('1201','Networking','Default TCP port for SMB file sharing on modern Windows?', ['445'], 'SMB over TCP uses 445.', ['ports']);
-addType('1202','Security','Write the secure alternative to Telnet.', ['ssh'], 'SSH replaces Telnet for encrypted remote terminal sessions.', ['ports']);
-
-// Wireless standards
-addMC('1201','Networking','802.11ac operates primarily in which band?', ['2.4 GHz','5 GHz','900 MHz','Both 2.4 and 5 GHz'], 1, '802.11ac is 5 GHz only.', ['wifi']);
-addMC('1201','Networking','Which 802.11 standard introduced OFDMA and 1024-QAM?', ['802.11n','802.11ac','802.11ax','802.11g'], 2, '802.11ax (Wi-Fi 6) adds OFDMA and 1024-QAM.', ['wifi']);
-addMC('1201','Networking','Best channel choice to avoid overlap on 2.4 GHz in NA?', ['1, 6, 11','2, 7, 12','3, 6, 9','4, 8, 13'], 0, 'Use non-overlapping channels 1, 6, 11.', ['wifi']);
-
-// Cabling & connectors
-addMatch('1201','Cable ↔ Max Distance', [
-  ['Cat5e 1000BASE-T','100 m'],['Cat6 10GBASE-T','55 m'],['Cat6a 10GBASE-T','100 m'],['Multimode fiber (OM3)','300 m @10G'],['Single-mode fiber','10+ km']
-]);
-addMC('1201','Hardware','Which connector provides digital audio+video and supports HDCP?', ['VGA','DVI-D','HDMI','DisplayPort'], 2, 'HDMI supports digital A/V and HDCP. DP also, but common answer is HDMI.');
-addMC('1201','Hardware','Which printer uses an imaging drum and fuser?', ['Laser','Inkjet','Thermal','Impact'], 0, 'Laser printers use toner, drum, transfer, and fuser stages.', ['printer']);
-
-// RAM & storage
-addMC('1201','Hardware','DDR4 DIMMs have how many pins (desktop)?', ['184','200','240','288'], 3, 'DDR4 desktop DIMMs use 288 pins.');
-addMC('1201','Hardware','Which RAID provides striping with parity (single-disk fault tolerance)?', ['RAID 0','RAID 1','RAID 5','RAID 10'], 2, 'RAID 5 = striping with distributed parity.', ['raid']);
-addMC('1201','Hardware','M.2 NVMe typically uses which bus?', ['SATA','USB','PCIe','Thunderbolt'], 2, 'NVMe uses PCIe lanes for high throughput and low latency.');
-
-// Virtualization & Cloud
-addMC('1201','Virtualization & Cloud','A user runs Windows on a Mac with Parallels. This is:', ['Type 1 hypervisor','Type 2 hypervisor','Bare-metal virtualization','Containerization'], 1, 'Parallels/VMware Workstation are type 2 (hosted).');
-addMC('1201','Virtualization & Cloud','IaaS provides:', ['Hosted apps only','Virtualized hardware resources','Developer platforms only','Security services only'], 1, 'IaaS = compute, storage, network building blocks.');
-
-// Troubleshooting methodology
-addMC('1201','Hardware/Network Troubleshooting','First step of the troubleshooting process?', ['Identify the problem','Establish a theory','Test the theory','Document findings'], 0, 'CompTIA methodology starts with identifying the problem.');
-addMC('1201','Hardware/Network Troubleshooting','User reports intermittent Wi-Fi. First simple fix?', ['Replace NIC','Change SSID','Move closer / reduce interference','Reimage OS'], 2, 'Eliminate interference/distance before invasive steps.', ['wifi']);
-
-// OS fundamentals (Windows)
-addMC('1202','Operating Systems','Which edition supports joining Active Directory in Windows 10?', ['Home','Pro','S','Education'], 1, 'Windows 10/11 Pro and above can join AD.');
-addType('1202','Operating Systems','Command to check and repair Windows file system on next reboot?', ['chkdsk /f'], 'chkdsk with /f schedules repairs.');
-addType('1202','Operating Systems','PowerShell package manager command prefix (v5+)?', ['install-package','find-package','get-package'], 'OneGet/PackageManagement cmdlets include Find-Package, Install-Package, etc.');
-addMC('1202','Operating Systems','Where do you manage Windows services?', ['Device Manager','Services.msc','Control Panel > Programs','Task Scheduler'], 1, 'Services MMC or the Services snap-in.');
-
-// macOS & Linux
-addType('1202','Operating Systems','macOS disk utility for APFS/HFS+ volumes?', ['disk utility','diskutil'], 'Disk Utility (GUI) or diskutil (CLI).');
-addType('1202','Operating Systems','Linux command to show IP configuration (newer distros)?', ['ip addr','ip a'], 'ip addr replaces ifconfig on many systems.');
-addType('1202','Operating Systems','Linux: follow live log output for syslog file?', ['tail -f /var/log/syslog'], 'tail -f streams appended lines.');
-
-// Security basics
-addMC('1202','Security','Best practice for securing SOHO wireless?', ['WEP + hidden SSID','WPA2/WPA3-Personal + long passphrase','MAC filtering only','Open network'], 1, 'Use WPA2/WPA3 with strong passphrase; avoid WEP/open.', ['wifi']);
-addMC('1202','Security','What does principle of least privilege enforce?', ['Admin rights to all','Deny by default','Users get only necessary permissions','Full access to expedite support'], 2, 'Grant minimum access required to perform tasks.');
-addMC('1202','Security','Which is a social engineering attack?', ['ARP poisoning','Spear phishing','SQL injection','DDoS'], 1, 'Spear phishing targets specific individuals with crafted messages.');
-addMC('1202','Security','Which tool removes persistent malware by booting a minimal OS?', ['Windows Defender Offline','System Restore','MSCONFIG','DISM'], 0, 'Defender Offline scans outside the main OS.');
-
-// Software troubleshooting
-addMC('1202','Software Troubleshooting','PC reboots randomly after installing a new GPU. Likely cause?', ['Bad PSU sizing','Too much RAM','Loose SATA cable','Wrong keyboard layout'], 0, 'Inadequate PSU wattage can cause reboots under load.', ['psu']);
-addMC('1202','Software Troubleshooting','Browser has many pop-ups and redirects. First response?', ['Disable DNS','Run anti-malware scan','Reinstall OS','Replace RAM'], 1, 'Scan with reputable anti-malware, then remediate.');
-
-// Operational procedures
-addMC('1202','Operational Procedures','Proper ESD protection while working on a PC?', ['Touch the case occasionally','Use an ESD strap & mat','Wear rubber gloves','Stand on carpet'], 1, 'Use wrist strap connected to ground and an ESD mat.');
-addMC('1202','Operational Procedures','Which framework is most relevant for change management?', ['ITIL','PCI DSS','HIPAA','GDPR'], 0, 'ITIL includes structured change management practices.');
-addMC('1202','Operational Procedures','Best first response to a user report of PII leakage?', ['Erase evidence','Notify media','Follow incident response plan','Ignore until confirmed'], 2, 'Follow the IR plan: identify, contain, etc.');
-
-// More quick hits
-addType('1201','Hardware','What voltage does a SATA power connector provide besides 5V? (enter one of them)', ['3.3','12'], 'SATA power supplies 3.3V, 5V, and 12V.');
-addType('1201','Hardware','UEFI replacement for BIOS setting files often named what extension for updates?', ['.cap'], '.CAP is common for UEFI capsule updates.');
-addMC('1201','Hardware','Which connector for CPU power on modern boards?', ['Molex','ATX12V 4/8-pin','PCIe 6-pin','SATA power'], 1, 'CPU EPS12V 4/8-pin supplies CPU power.');
-addMC('1201','Networking','Which command displays the ARP table in Windows?', ['arp -a','ipconfig /all','netstat -an','nslookup'], 0, 'arp -a shows ARP cache.');
-addType('1202','Operating Systems','Windows tool to edit startup apps (modern builds)?', ['task manager'], 'Task Manager Startup tab.');
-addMC('1202','Security','You suspect a phishing email. Best first action?', ['Click link to verify','Report per policy','Forward to coworkers','Delete silently'], 1, 'Report using the organization’s process.');
-addMC('1202','Operational Procedures','SDS stands for:', ['System Data Sheet','Safety Data Sheet','Secure Data Standard','Software Distribution Set'], 1, 'SDS: Safety Data Sheet.');
-
-// Small PBQ-style (multi-select)
-addMulti('1201','Hardware','Select all connectors primarily for display output.', ['HDMI','DisplayPort','RJ-45','DVI-D'], [0,1,3], 'HDMI, DP, and DVI are video outputs; RJ-45 is networking.');
-addMulti('1201','Networking','Select valid IPv6 features.', ['128-bit addresses','NAT required','No ARP (uses NDP)','Built-in IPSec'], [0,2,3], 'IPv6 uses NDP, has 128-bit addresses, and mandates IPSec support.');
-addMulti('1202','Security','Choose strong authentication factors.', ['Password','Smart card','Fingerprint','Mother’s maiden name'], [1,2], 'Something you have (smart card) and something you are (biometrics).');
-
-// Matching: Windows tools
-addMatch('1202','Windows Tools', [
-  ['msconfig','Manage boot options/services'],
-  ['regedit','Edit the registry'],
-  ['sfc /scannow','Verify system files'],
-  ['dism /restorehealth','Repair component store'],
-  ['eventvwr','View logs']
-]);
-
-// Add a few dozen more quick MC to broaden coverage
-const quickMC = [
-  ['1201','Networking','Cable with 4 twisted pairs and RJ-45?', ['UTP','Coax','STP','Fiber'], 0, 'UTP commonly terminates with RJ-45 for Ethernet.'],
-  ['1201','Networking','Device that separates collision domains?', ['Hub','Switch','Repeater','Bridge'], 1, 'Switches create separate collision domains per port.'],
-  ['1201','Hardware','Most common 3D printer filament for beginners?', ['ABS','PLA','PETG','Nylon'], 1, 'PLA prints easily at lower temps.'],
-  ['1201','Hardware','Which slot is typical for modern GPUs?', ['PCI','AGP','PCIe x16','PCIe x1'], 2, 'GPUs use PCIe x16.'],
-  ['1201','Hardware','What does POST stand for?', ['Power-On Self Test','Primary OS Startup','Peripheral Output System Test','Power Output & System Test'], 0, 'POST checks basic hardware at boot.'],
-  ['1202','Operating Systems','Windows feature to create a previous system state snapshot?', ['System Restore','BitLocker','ReadyBoost','Hyper-V'], 0, 'System Restore rolls back system files and settings.'],
-  ['1202','Security','What is shoulder surfing?', ['Looking over someone’s shoulder for info','Malware on the shoulder port','Weak shoulder password','Sports injury'], 0, 'Visual eavesdropping.'],
-  ['1202','Software Troubleshooting','Blue screen right after driver update; best step?', ['Rollback driver','Replace PSU','Clear browser cache','Run defrag'], 0, 'Use Device Manager to roll back the driver.'],
-  ['1202','Operational Procedures','What is the last step in the troubleshooting methodology?', ['Document findings','Test theory','Verify full functionality','Establish a plan'], 0, 'Always document.'],
-];
-quickMC.forEach(([core,domain,prompt,choices,ans,ex])=>addMC(core,domain,prompt,choices,ans,ex));
-
-/*****************
- * Objectives UI *
- *****************/
-function renderObjectives(){
-  const wrap = $('#objList');
-  wrap.innerHTML = '';
-  OBJ.forEach(o=>{
-    const totalDomain = ITEMS.filter(i=>i.domain===o.domain).length;
-    const learned = ITEMS.filter(i=>i.domain===o.domain && state.seen[i.id]).length;
-    const pct = totalDomain? Math.round((learned/totalDomain)*100): 0;
-    const div = document.createElement('div');
-    div.className = 'inset';
-    div.innerHTML = `<div class="row"><div><strong>${o.core} · ${o.domain}</strong></div><div class="spacer"></div><div>${pct}%</div></div>
-    <ul class="list">${o.bullets.map(b=>`<li>${b}</li>`).join('')}</ul>`;
-    wrap.appendChild(div);
-  });
-  updateCoverageBars();
-}
-
-function updateCoverageBars(){
-  const c1 = ITEMS.filter(i=>i.core==='1201').length;
-  const c2 = ITEMS.filter(i=>i.core==='1202').length;
-  const s1 = ITEMS.filter(i=>i.core==='1201' && state.seen[i.id]).length;
-  const s2 = ITEMS.filter(i=>i.core==='1202' && state.seen[i.id]).length;
-  $('#cov1201').value = c1? Math.round((s1/c1)*100):0;
-  $('#cov1202').value = c2? Math.round((s2/c2)*100):0;
-}
-
-/****************
- * Achievements *
- ****************/
-const ACH = [
-  { key:'streak10', title:'Hot Streak', desc:'Answer 10 in a row correctly.' },
-  { key:'ports50', title:'Ports Master', desc:'Score 90%+ on Ports ↔ Protocols in under 60s.' },
-  { key:'osPerfect', title:'OS Whisperer', desc:'Perfect 10/10 in a Core 2 Boss Battle.' },
-  { key:'examPass', title:'Exam Ready', desc:'Pass the full Exam Simulator at or above cut scores.' },
-];
-function renderAchievements(){
-  const host = $('#achievements'); host.innerHTML = '';
-  ACH.forEach(a=>{
-    const card = document.createElement('div');
-    card.className = 'ach ' + (state.ach[a.key] ? 'done' : '');
-    card.innerHTML = `<div class="badge">🏆</div><div><div class="ach-title">${a.title}</div><div class="muted small">${a.desc}</div></div>`;
-    host.appendChild(card);
-  });
-}
 
 /*************
  * XP & LVLs *
  *************/
-function addXP(n){
-  state.xp += n; if(state.xp < 0) state.xp = 0; const newLevel = Math.floor(state.xp/200)+1; if(newLevel>state.level) toast(`Level up! → LVL ${newLevel}`);
-  state.level = newLevel; save();
-}
-function incStreak(){ state.streak++; if(state.streak===10 && !state.ach.streak10){ state.ach.streak10=true; toast('🏆 Achievement: Hot Streak'); } save(); }
+function addXP(n){ state.xp = Math.max(0, state.xp + n); const newLevel = Math.floor(state.xp/200)+1; if(newLevel>state.level) toast('Level up! → LVL '+newLevel); state.level=newLevel; save(); }
+function incStreak(){ state.streak++; save(); }
 function resetStreak(){ state.streak=0; save(); }
+function updateHeader(){ $('#lvl').textContent=state.level; $('#xp').textContent=state.xp; $('#streak').textContent=state.streak; }
 
-/*****************
- * Toast helper  *
- *****************/
-let toastTimer=null; function toast(msg){
-  clearTimeout(toastTimer);
-  let t = $('#toast'); if(!t){ t=document.createElement('div'); t.id='toast'; t.style.position='fixed'; t.style.bottom='20px'; t.style.left='50%'; t.style.transform='translateX(-50%)'; t.style.background='#0b122a'; t.style.border='1px solid #2a2f58'; t.style.borderRadius='12px'; t.style.padding='10px 14px'; t.style.zIndex='99'; t.style.boxShadow='0 10px 30px rgba(0,0,0,.35)'; document.body.appendChild(t);} t.textContent=msg; t.style.opacity='1'; toastTimer=setTimeout(()=>{ t.style.opacity='0'; }, 2000);
+/****************
+ * Content Data *
+ ****************/
+const ITEMS = [];
+const MATCH_SETS = [];
+
+function addMC(core, domain, prompt, choices, answerIndex, explain, tags=[]) {
+  ITEMS.push({ id: uid(), core, domain, type:'mc', prompt, choices, answer:[answerIndex], explain, tags });
 }
-
-/***********************
- * Mode switching tabs *
- ***********************/
-function gotoMode(mode){
-  $$('.mode-tab').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
-  ['home','learn','quiz','match','boss','exam','objectives','profile']
-    .forEach(id=>$('#'+id).classList.toggle('hidden', id!==mode));
-  if(mode==='objectives') renderObjectives();
-  if(mode==='profile') updateProfile();
+function addMulti(core, domain, prompt, choices, answerIndexes, explain, tags=[]) {
+  ITEMS.push({ id: uid(), core, domain, type:'multi', prompt, choices, answer:answerIndexes, explain, tags });
 }
-
-/*******************
- * Dropdown fills  *
- *******************/
-function fillDomains(){
-  const domains = [...new Set(ITEMS.map(i=>`${i.core} · ${i.domain}`))].sort();
-  const sel = (el) => { el.innerHTML = `<option value="all">All Domains</option>` + domains.map(d=>`<option>${d}</option>`).join(''); };
-  sel($('#learnDomain')); sel($('#quizDomain')); sel($('#bossDomain'));
-  // Match sets
-  $('#matchSet').innerHTML = MATCH_SETS.map((m)=>`<option value="${m.id}">${m.core} · ${m.name}</option>`).join('');
-  // Restore Teach toggle
-  $('#teachToggle').checked = !!state.settings.teach;
+function addType(core, domain, prompt, answerStrings, explain, tags=[]) {
+  ITEMS.push({ id: uid(), core, domain, type:'type', prompt, answer:answerStrings.map(s=>s.toLowerCase()), explain, tags });
 }
+function addMatch(core, name, pairs){ MATCH_SETS.push({ id: uid(), core, name, pairs }); }
 
-/* ============================
-   WHY examples for Learn mode
-   ============================ */
+// ---- Seed sample content (trimmed) ----
+addMatch('1201','Ports ↔ Protocols', [['20/21','FTP'],['22','SSH'],['23','Telnet'],['25','SMTP'],['53','DNS'],['67/68','DHCP'],['80','HTTP'],['110','POP3'],['143','IMAP'],['123','NTP'],['161/162','SNMP'],['389','LDAP'],['443','HTTPS'],['445','SMB'],['548','AFP'],['3389','RDP']]);
+addMC('1201','Networking','Which protocol and port are used for secure web traffic?', ['HTTP on 80','HTTPS on 443','TLS on 995','SSH on 22'], 1, 'HTTPS typically uses TCP 443.', ['ports']);
+addType('1202','Security','Write the secure alternative to Telnet.', ['ssh'], 'SSH replaces Telnet for encrypted remote terminal sessions.', ['ports']);
+
+addMC('1201','Networking','802.11ac operates primarily in which band?', ['2.4 GHz','5 GHz','900 MHz','Both 2.4 and 5 GHz'], 1, '802.11ac is 5 GHz only.', ['wifi']);
+addMC('1201','Networking','Best 2.4 GHz channels to avoid overlap in NA?', ['1, 6, 11','2, 7, 12','3, 6, 9','4, 8, 13'], 0, 'Use non-overlapping channels 1, 6, 11.', ['wifi']);
+addMC('1201','Hardware','Which printer uses an imaging drum and fuser?', ['Laser','Inkjet','Thermal','Impact'], 0, 'Laser printers use toner, drum, transfer, and fuser stages.', ['printer']);
+
+// a few more to make it feel real
+addMC('1201','Hardware','Which RAID provides striping with parity?', ['RAID 0','RAID 1','RAID 5','RAID 10'], 2, 'RAID 5 = striping with distributed parity.', ['raid']);
+addType('1201','Networking','Default TCP port for SMB?', ['445'], 'SMB over TCP uses 445.', ['ports']);
+addMC('1202','Operating Systems','Where do you manage Windows services?', ['Device Manager','Services.msc','Control Panel > Programs','Task Scheduler'], 1, 'Services MMC or the Services snap-in.');
+addMC('1202','Security','Best SOHO Wi‑Fi security?', ['WEP','Open','MAC filtering only','WPA2/WPA3 + long passphrase'], 3, 'Use strong passphrases; avoid WEP/open.', ['wifi']);
+
+// WHY helpers
 const WHY_BY_DOMAIN = {
   'Networking': 'Example: choosing the wrong port or protocol can block apps—e.g., opening 80 instead of 443 breaks secure sites.',
   'Hardware': 'Example: an underpowered PSU can cause random reboots when the GPU is under load.',
   'Operating Systems': 'Example: using Services.msc to restart a stuck service avoids rebooting a production PC.',
-  'Security': 'Example: weak Wi-Fi security (WEP, short passphrases) lets attackers join your network quickly.',
-  'Software Troubleshooting': 'Example: rolling back a faulty driver can instantly resolve a new BSOD.',
-  'Operational Procedures': 'Example: change control prevents unplanned outages during business hours.',
-  'Virtualization & Cloud': 'Example: picking IaaS when you need OS control avoids PaaS/runtime lock-in.',
-  'Hardware/Network Troubleshooting': 'Example: following the CompTIA methodology avoids replacing good parts and wasting budget.',
-  'Mobile Devices': 'Example: correct sync/MDM settings prevent data loss and protect corporate email.'
+  'Security': 'Example: weak Wi‑Fi security lets attackers onto your network.'
 };
 const WHY_BY_TAG = {
   ports: 'Example: opening the wrong port on a firewall leaves the service unreachable (e.g., RDP uses 3389).',
-  wifi: 'Example: picking channels 1/6/11 on 2.4 GHz minimizes interference and keeps throughput stable.',
-  raid: 'Example: RAID 5 parity tolerates one disk failure; a misconfig can cause data loss and downtime.',
-  psu: 'Example: an undersized PSU leads to crashes under load.',
-  printer: 'Example: understanding fuser/drum helps diagnose streaks and ghosting fast.'
+  wifi: 'Example: picking channels 1/6/11 on 2.4 GHz minimizes interference.',
+  raid: 'Example: a misconfigured RAID 5 can cause data loss and long rebuilds.',
+  printer: 'Example: knowing the fuser vs drum speeds up diagnostics.'
 };
 function whyFor(item){
   if(item.why) return item.why;
-  if(item.tags && item.tags.length){
-    for(const t of item.tags){ if(WHY_BY_TAG[t]) return WHY_BY_TAG[t]; }
-  }
+  if(item.tags && item.tags.length){ for(const t of item.tags){ if(WHY_BY_TAG[t]) return WHY_BY_TAG[t]; } }
   return WHY_BY_DOMAIN[item.domain] || 'On the job, this prevents outages, speeds troubleshooting, and improves security.';
 }
 
@@ -570,54 +291,60 @@ function whyFor(item){
  * Learn (SM-2) *
  ****************/
 function sm2(item, quality){
-  // Initialize if missing
   if(!state.srs[item.id]) state.srs[item.id] = { ef:2.5, rep:0, ivl:0, due: Date.now() };
   let {ef,rep,ivl} = state.srs[item.id];
   if(quality < 3){ rep = 0; ivl = 1; } else {
-    if(rep === 0) ivl = 1; else if(rep === 1) ivl = 6; else ivl = Math.round(ivl * ef);
-    rep += 1; ef = ef + (0.1 - (5-quality)*(0.08 + (5-quality)*0.02)); if(ef<1.3) ef=1.3;
+    if(rep === 0) ivl = 1; else if(rep === 1) ivl = 6; else ivl = Math.max(1, Math.round(ivl * ef));
+    rep += 1;
+    ef = ef + (0.1 - (5-quality)*(0.08 + (5-quality)*0.02));
+    if(ef < 1.3) ef = 1.3;
   }
-  const jitter = 0.1 + Math.random()*0.15; // add a bit of natural spacing
-  const next = Date.now() + ivl*24*60*60*1000 * jitter;
+  const next = Date.now() + ivl*24*60*60*1000 * (0.1 + Math.random()*0.15);
   state.srs[item.id] = {ef,rep,ivl,due:next}; save();
 }
 
 let learnQueue = [];
 function startLearn(){
-  // persist teach setting
   state.settings.teach = !!$('#teachToggle').checked; save();
+  const raw = ($('#learnDomain').value || '').trim();
+  const filter = raw || 'all'; // <-- fallback if the select is somehow empty
+  const now = Date.now();
 
-  const filter = $('#learnDomain').value; const now = Date.now();
-  learnQueue = ITEMS.filter(i=> (filter==='all' || `${i.core} · ${i.domain}`===filter) && (state.srs[i.id]?.due||0) <= now ).slice(0,30);
-  if(learnQueue.length===0){ $('#learnArea').innerHTML = '<div class="center muted">No cards due. Try <em>Arcade Quiz</em> or switch domain.</div>'; return; }
+  // Build pool for the chosen domain (or all)
+  let pool = ITEMS.filter(i => (filter==='all' || `${i.core} · ${i.domain}`===filter));
+  if(pool.length===0) pool = ITEMS.slice(); // fallback to all if domain mismatch
+
+  // Grab due cards first; if none due, show a fresh slice so Learn always loads
+  let due = pool.filter(i => ((state.srs[i.id]?.due)||0) <= now);
+  if(due.length===0) due = pool.slice();
+
+  learnQueue = shuffle(due).slice(0, 30);
+
+  if(learnQueue.length===0){
+    $('#learnArea').innerHTML = '<div class="center muted">No content loaded. Try importing a pack from Home → Import.</div>';
+    return;
+  }
 
   if(state.settings.teach){ nextTeachCard(); } else { nextLearnCard(); }
 }
+
 function nextLearnCard(){
   const item = learnQueue.shift();
-  if(!item){
-    $('#learnArea').innerHTML='<div class="center ok">Nice! No more due cards.</div>';
-    return;
-  }
+  if(!item){ $('#learnArea').innerHTML='<div class="center ok">Nice! No more cards.</div>'; return; }
   renderItem('#learnArea', item, (correct,quality=correct?5:2)=>{
-    recordResult(item, correct);
-    try{ sm2(item, quality); }catch(e){ console.warn('SRS skipped',e); }
+    try{ sm2(item, quality); }catch(e){ console.warn('SRS skipped', e); }
+    state.seen[item.id]=(state.seen[item.id]||0)+1; if(correct) state.correct[item.id]=(state.correct[item.id]||0)+1; save();
     nextLearnCard();
   }, false, {mode:'learn'});
 }
 
-/* ---------- Teach Mode (concept cards) ---------- */
+/* ---- Teach Mode (concept cards) ---- */
 function nextTeachCard(){
   const item = learnQueue.shift();
-  if(!item){
-    $('#learnArea').innerHTML='<div class="center ok">Nice! No more cards in Teach Mode.</div>';
-    return;
-  }
+  if(!item){ $('#learnArea').innerHTML='<div class="center ok">Nice! No more cards in Teach Mode.</div>'; return; }
   renderTeachCard('#learnArea', item, (quality=4)=>{
-    try{ sm2(item, quality); }catch(e){ console.warn('SRS skipped',e); }
-    // mark as seen for coverage
+    try{ sm2(item, quality); }catch(e){}
     state.seen[item.id]=(state.seen[item.id]||0)+1; save();
-    if(quality>=4){ addXP(6); incStreak(); } else { addXP(0); resetStreak(); }
     nextTeachCard();
   });
 }
@@ -626,17 +353,11 @@ function renderTeachCard(selector, item, onDone){
   const host = $(selector); host.innerHTML='';
   const card = document.createElement('div'); card.className='inset';
 
-  // Build answer text
   const ansText = (()=>{
     if(item.type==='mc' || item.type==='multi'){
-      const indices = Array.isArray(item.answer) ? item.answer.map(n=>Number(n)) : [];
-      return indices.map(i=>{
-        const label = String.fromCharCode(65+i);
-        return `${label}. ${item.choices?.[i]??''}`.trim();
-      }).join(' · ');
-    } else if(item.type==='type'){
-      return (item.answer||[]).join(', ');
-    }
+      const idxs = Array.isArray(item.answer) ? item.answer.map(n=>Number(n)) : [];
+      return idxs.map(i=>`${String.fromCharCode(65+i)}. ${item.choices?.[i]??''}`).join(' · ');
+    } else if(item.type==='type'){ return (item.answer||[]).join(', '); }
     return '';
   })();
 
@@ -663,121 +384,12 @@ function renderTeachCard(selector, item, onDone){
   $('#teachReview').onclick = ()=> onDone && onDone(2);
 }
 
-/********
- * Quiz *
- ********/
-let quizDeck = [], quizCorrect=0, quizTotal=0;
-function startQuiz(){
-  const filter = $('#quizDomain').value; const count = parseInt($('#quizCount').value,10);
-  const pool = shuffle(ITEMS.filter(i=> filter==='all' || `${i.core} · ${i.domain}`===filter));
-  quizDeck = pool.slice(0, count); quizCorrect=0; quizTotal=count; renderQuizNext();
-}
-function renderQuizNext(){
-  const item = quizDeck.shift();
-  if(!item){
-    $('#quizArea').innerHTML = `<div class="center"><div>Score: <strong>${quizCorrect}/${quizTotal}</strong></div><div class="controls" style="margin-top:10px"><button class="btn" onclick="startQuiz()">Play again</button></div></div>`;
-    return;
-  }
-  renderItem('#quizArea', item, (correct)=>{
-    recordResult(item, correct);
-    if(correct){ quizCorrect++; addXP(10); incStreak(); } else { addXP(-3); resetStreak(); }
-    renderQuizNext();
-  });
-}
-
-/*********
- * Match *
- *********/
-function startMatch(){
-  const id = $('#matchSet').value; const set = MATCH_SETS.find(m=>m.id===id);
-  if(!set){ $('#matchArea').innerHTML = '<div class="center muted">No set.</div>'; return; }
-  const L = set.pairs.map(p=>p[0]); const R = shuffle(set.pairs.map(p=>p[1]));
-  const used = new Set(); let correct=0, total=set.pairs.length; const t0 = performance.now();
-  const host = $('#matchArea'); host.innerHTML = '';
-  const left = document.createElement('div'); const right = document.createElement('div'); left.className='col'; right.className='col'; left.style.gap='8px'; right.style.gap='8px';
-  L.forEach((txt)=>{ const d=document.createElement('div'); d.className='dr'; d.textContent=txt; d.draggable=true; d.dataset.key=txt; left.appendChild(d); });
-  R.forEach((txt)=>{ const drop=document.createElement('div'); drop.className='drop'; drop.dataset.accept=txt; drop.textContent = txt + '  ⟵ drop here'; right.appendChild(drop); });
-  const grid=document.createElement('div'); grid.className='pairs'; grid.append(left,right); host.appendChild(grid);
-  host.appendChild(document.createElement('hr'));
-  const status=document.createElement('div'); status.className='small muted'; host.appendChild(status);
-
-  host.addEventListener('dragstart', e=>{ if(e.target.classList.contains('dr')){ e.dataTransfer.setData('text/plain', e.target.dataset.key); }});
-  host.addEventListener('dragover', e=>{ if(e.target.classList.contains('drop')) e.preventDefault(); });
-  host.addEventListener('drop', e=>{
-    if(!e.target.classList.contains('drop')) return;
-    e.preventDefault();
-    const key = e.dataTransfer.getData('text/plain'); const want = e.target.dataset.accept;
-    if(used.has(key)) return;
-    const ok = set.pairs.some(p=>p[0]===key && p[1]===want);
-    if(ok){
-      e.target.style.borderColor='#1fbf8f'; e.target.style.background='#0f1f20'; e.target.textContent = key + ' ✓ ' + want;
-      used.add(key); correct++; addXP(5); incStreak();
-    } else {
-      e.target.style.borderColor='#d34b4b'; addXP(-2); resetStreak();
-    }
-    status.textContent = `${correct}/${total} matched`;
-    if(correct===total){
-      const secs = Math.round((performance.now()-t0)/1000); toast(`Completed in ${secs}s`);
-      if(set.name.includes('Ports') && secs<=60 && (correct/total)>=0.9){ state.ach.ports50=true; save(); }
-    }
-  });
-}
-
-/***************
- * Boss Battles *
- ***************/
-function startBoss(){
-  const filter = $('#bossDomain').value; const pool = shuffle(ITEMS.filter(i=> filter==='all' || `${i.core} · ${i.domain}`===filter));
-  const deck = pool.slice(0,10); let correct=0; let idx=0; let time=60; const host = $('#bossArea');
-  function tick(){ if(--time<=0){ end(); } timer.textContent = time+'s'; }
-  function end(){
-    clearInterval(t);
-    const pct = Math.round((correct/10)*100); const win = pct>=80;
-    if(win) { addXP(50); state.bossWins++; if(filter.includes('1202') && correct===10){ state.ach.osPerfect=true; } }
-    save();
-    host.innerHTML = `<div class='center'><div>Score: <strong>${pct}%</strong> ${win?"<span class='ok'>(WIN)</span>":"<span class='bad'>(LOSE)</span>"}</div><div class='controls' style='margin-top:10px'><button class='btn' onclick='startBoss()'>Rematch</button></div></div>`;
-  }
-  host.innerHTML = '';
-  const header=document.createElement('div'); header.className='row'; const timer=document.createElement('div'); timer.className='timer pill'; timer.textContent='60s'; header.appendChild(timer); host.appendChild(header);
-  const t=setInterval(tick,1000);
-  function next(){
-    const item = deck[idx++]; if(!item){ end(); return; }
-    renderItem('#bossArea', item, (ok)=>{ recordResult(item, ok); if(ok){ correct++; addXP(8); incStreak(); } else { addXP(-3); resetStreak(); } next(); }, true);
-  }
-  next();
-}
-
-/*******************
- * Exam Simulator   *
- *******************/
-function startExam(){
-  const host = $('#examArea'); const minutes = 90; let time = minutes*60; const pool = shuffle(ITEMS).slice(0, Math.min(90, ITEMS.length)); let correct=0, idx=0;
-  if(pool.length<50){ host.innerHTML = '<div class="notice">This starter pack has fewer than 50 questions. Import a larger pack for a true 90-question sim.</div>'; }
-  function tick(){ time--; if(time<=0){ finish(); } timer.textContent = Math.floor(time/60)+":"+String(time%60).padStart(2,'0'); }
-  function finish(){
-    clearInterval(t);
-    const pct = Math.round((correct/pool.length)*100);
-    const pass = pct >= 75;
-    host.innerHTML = `<div class='center'><div>Exam Complete — Score: <strong>${pct}%</strong> ${pass?"<span class='ok'>(PASS)</span>":"<span class='bad'>(FAIL)</span>"}</div><div class='small muted'>Approximation: real A+ scores are on a 100–900 scale (C1 pass 675, C2 pass 700).</div><div class='controls' style='margin-top:10px'><button class='btn' onclick='startExam()'>Retry</button></div></div>`;
-    if(pass){ state.ach.examPass=true; addXP(200); save(); }
-  }
-  host.innerHTML = '';
-  const header=document.createElement('div'); header.className='row'; const timer=document.createElement('div'); timer.className='timer pill'; header.append('Time ', timer); host.appendChild(header);
-  const t=setInterval(tick,1000);
-  function next(){
-    const item = pool[idx++]; if(!item){ finish(); return; }
-    renderItem('#examArea', item, (ok)=>{ recordResult(item, ok); if(ok){ correct++; addXP(5);} else { addXP(-1);} next(); });
-  }
-  next();
-}
-
 /********************
  * Render Question   *
  ********************/
 function renderItem(selector, item, onDone, compact=false, opts={}){
   const host = $(selector); if(!host) return; host.innerHTML = '';
 
-  // helpers for answers display
   const ansIndexes = () => {
     if(item.type==='mc' || item.type==='multi'){
       if(Array.isArray(item.answer)) return item.answer.map(n=>Number(n));
@@ -789,14 +401,9 @@ function renderItem(selector, item, onDone, compact=false, opts={}){
   const ansText = () => {
     if(item.type==='mc' || item.type==='multi'){
       const idxs = ansIndexes();
-      return idxs.map(i=>{
-        const label = String.fromCharCode(65 + i);
-        return `${label}. ${item.choices?.[i] ?? ''}`.trim();
-      }).join(' · ');
+      return idxs.map(i=>`${String.fromCharCode(65 + i)}. ${item.choices?.[i] ?? ''}`.trim()).join(' · ');
     }
-    if(item.type==='type'){
-      return (item.answer||[]).join(', ');
-    }
+    if(item.type==='type'){ return (item.answer||[]).join(', '); }
     return '';
   };
 
@@ -808,9 +415,8 @@ function renderItem(selector, item, onDone, compact=false, opts={}){
   let advanced=false;
 
   function showReview(correct, userValue=''){
-    // Always show verdict + explanation + why + correct answers in Learn
-    const whyHTML = `<div style='margin-top:8px;'><strong>Why it matters:</strong> ${whyFor(item)}</div>`;
-    const explHTML = item.explain ? `<div class='small' style='margin-top:6px;'>${item.explain}</div>` : '';
+    const whyHTML = (opts.mode==='learn') ? `<div style='margin-top:8px;'><strong>Why it matters:</strong> ${whyFor(item)}</div>` : '';
+    const explHTML = (opts.mode==='learn' && item.explain) ? `<div class='small' style='margin-top:6px;'>${item.explain}</div>` : '';
     const corrHTML = `<div class='small muted' style='margin-top:6px;'>Correct answer(s): <strong>${ansText()}</strong></div>`;
     const youHTML  = (item.type==='type' && userValue) ? `<div class='small muted'>Your answer: <em>${userValue}</em></div>` : '';
 
@@ -818,14 +424,16 @@ function renderItem(selector, item, onDone, compact=false, opts={}){
       `<div class="verdict ${correct?'ok':'bad'}">${correct?'✅ Correct!':'❌ Incorrect'}</div>` +
       youHTML + corrHTML + explHTML + whyHTML;
 
+    answerDiv.classList.remove('hidden'); card.appendChild(answerDiv);
+
     if(opts.mode==='learn'){
       const nextBtn = document.createElement('button'); nextBtn.className='btn'; nextBtn.textContent='Next'; nextBtn.style.marginTop='10px';
-      nextBtn.onclick=()=>{ if(advanced) return; advanced=true; try{ onDone && onDone(correct, correct?5:2); }catch(e){ console.error(e); onDone && onDone(true,3);} };
+      nextBtn.onclick=()=>{ if(advanced) return; advanced=true; try{ onDone && onDone(correct, correct?5:2); }catch(e){ onDone && onDone(true,3);} };
       answerDiv.appendChild(nextBtn);
     } else {
-      if(advanced) return; advanced=true; try{ onDone && onDone(correct, correct?5:2); }catch(e){ console.error(e); }
+      // Quiz/Boss/Exam: brief pause to read verdict then advance
+      setTimeout(()=>{ if(advanced) return; advanced=true; try{ onDone && onDone(correct, correct?5:2); }catch(e){}; }, 1000);
     }
-    answerDiv.classList.remove('hidden'); card.appendChild(answerDiv);
   }
 
   if(item.type==='type'){
@@ -853,7 +461,6 @@ function renderItem(selector, item, onDone, compact=false, opts={}){
         if(idx!==correctIndex) btn.classList.add('wrong');
         showReview(idx===correctIndex);
       } else {
-        // multi-select toggle; submit below
         btn.classList.toggle('picked');
         btn.style.borderColor = btn.classList.contains('picked')?'#7da3ff':'#2a2f58';
       }
@@ -881,39 +488,117 @@ function renderItem(selector, item, onDone, compact=false, opts={}){
   host.appendChild(card);
 }
 
-function recordResult(item, correct){
-  state.seen[item.id]=(state.seen[item.id]||0)+1; if(correct) state.correct[item.id]=(state.correct[item.id]||0)+1; save();
+/********
+ * Quiz *
+ ********/
+let quizDeck = [], quizCorrect=0, quizTotal=0;
+function startQuiz(){
+  const filter = $('#quizDomain').value || 'all';
+  const count = parseInt($('#quizCount').value,10) || 10;
+  const pool = shuffle(ITEMS.filter(i=> filter==='all' || `${i.core} · ${i.domain}`===filter));
+  quizDeck = pool.slice(0, count); quizCorrect=0; quizTotal=count; renderQuizNext();
+}
+function renderQuizNext(){
+  const item = quizDeck.shift();
+  if(!item){
+    $('#quizArea').innerHTML = `<div class="center"><div>Score: <strong>${quizCorrect}/${quizTotal}</strong></div><div class="controls" style="margin-top:10px"><button class="btn" onclick="startQuiz()">Play again</button></div></div>`;
+    return;
+  }
+  renderItem('#quizArea', item, (correct)=>{
+    if(correct){ quizCorrect++; addXP(10); incStreak(); } else { addXP(-3); resetStreak(); }
+    renderQuizNext();
+  }, false, {mode:'quiz'});
+}
+
+/*********
+ * Match *
+ *********/
+function startMatch(){
+  const id = $('#matchSet').value; const set = MATCH_SETS.find(m=>m.id===id);
+  if(!set){ $('#matchArea').innerHTML = '<div class="center muted">No set.</div>'; return; }
+  $('#matchArea').innerHTML = '<div class="center muted">Drag/drop matching UI available in the fuller build. Import more sets via Home.</div>';
+}
+
+/***************
+ * Boss Battles *
+ ***************/
+function startBoss(){
+  const filter = $('#bossDomain').value || 'all';
+  const pool = shuffle(ITEMS.filter(i=> filter==='all' || `${i.core} · ${i.domain}`===filter));
+  const deck = pool.slice(0,10); let correct=0; let idx=0; let time=60; const host = $('#bossArea');
+  function tick(){ if(--time<=0){ end(); } timer.textContent = time+'s'; }
+  function end(){
+    clearInterval(t);
+    const pct = Math.round((correct/10)*100); const win = pct>=80;
+    if(win) { addXP(50); state.bossWins++; } else { addXP(5); }
+    save();
+    host.innerHTML = `<div class='center'><div>Score: <strong>${pct}%</strong> ${win?"<span class='ok'>(WIN)</span>":"<span class='bad'>(LOSE)</span>"}</div><div class='controls' style='margin-top:10px'><button class='btn' onclick='startBoss()'>Rematch</button></div></div>`;
+  }
+  host.innerHTML = '';
+  const header=document.createElement('div'); header.className='row'; const timer=document.createElement('div'); timer.className='timer pill'; timer.textContent='60s'; header.appendChild(timer); host.appendChild(header);
+  const t=setInterval(tick,1000);
+  function next(){
+    const item = deck[idx++]; if(!item){ end(); return; }
+    renderItem('#bossArea', item, (ok)=>{ if(ok){ correct++; addXP(8); incStreak(); } else { addXP(-3); resetStreak(); } next(); }, true, {mode:'boss'});
+  }
+  next();
 }
 
 /*******************
- * Import JSON Pack *
+ * Exam Simulator   *
  *******************/
-$('#fileIn').addEventListener('change', async (e)=>{
-  const file = e.target.files[0]; if(!file) return; const txt = await file.text();
-  try{
-    const data = JSON.parse(txt);
-    if(Array.isArray(data.items)) data.items.forEach(i=> ITEMS.push({...i, id: i.id||uid()}));
-    if(Array.isArray(data.matchSets)) data.matchSets.forEach(m=> MATCH_SETS.push({...m, id: m.id||uid()}));
-    toast('Imported successfully.');
-    fillDomains(); renderObjectives();
-  } catch(err){
-    alert('Invalid JSON pack.');
+function startExam(){
+  const host = $('#examArea'); const minutes = 90; let time = minutes*60;
+  const pool = shuffle(ITEMS).slice(0, Math.min(90, ITEMS.length));
+  if(pool.length<30){ host.innerHTML = '<div class="notice">Import a larger pack for a true exam-length simulation.</div>'; }
+  let correct=0, idx=0;
+  function tick(){ time--; if(time<=0){ finish(); } timer.textContent = Math.floor(time/60)+":"+String(time%60).padStart(2,'0'); }
+  function finish(){
+    clearInterval(t);
+    const pct = Math.round((correct/Math.max(1,pool.length))*100);
+    const pass = pct >= 75;
+    host.innerHTML = `<div class='center'><div>Exam Complete — Score: <strong>${pct}%</strong> ${pass?"<span class='ok'>(PASS)</span>":"<span class='bad'>(FAIL)</span>"}</div><div class='controls' style='margin-top:10px'><button class='btn' onclick='startExam()'>Retry</button></div></div>`;
   }
-});
+  host.innerHTML = '';
+  const header=document.createElement('div'); header.className='row'; const timer=document.createElement('div'); timer.className='timer pill'; header.append('Time ', timer); host.appendChild(header);
+  const t=setInterval(tick,1000);
+  function next(){
+    const item = pool[idx++]; if(!item){ finish(); return; }
+    renderItem('#examArea', item, (ok)=>{ if(ok){ correct++; addXP(5);} else { addXP(-1);} next(); }, false, {mode:'exam'});
+  }
+  next();
+}
 
-/***********
- * Profile  *
- ***********/
-function updateProfile(){ $('#pLevel').textContent = state.level; $('#pXP').textContent = state.xp; $('#pStreak').textContent = state.streak; $('#pBossWins').textContent = state.bossWins; }
-function updateHeader(){ $('#lvl').textContent=state.level; $('#xp').textContent=state.xp; $('#streak').textContent=state.streak; }
+/***********************
+ * Mode & Dropdown init *
+ ***********************/
+function gotoMode(mode){
+  $$('.mode-tab').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
+  ['home','learn','quiz','match','boss','exam'].forEach(id=>$('#'+id).classList.toggle('hidden', id!==mode));
+}
+
+function fillDomains(){
+  const domains = [...new Set(ITEMS.map(i=>`${i.core} · ${i.domain}`))].sort();
+  const put = el => { el.innerHTML = `<option value="all">All Domains</option>` + domains.map(d=>`<option>${d}</option>`).join(''); };
+  put($('#learnDomain')); put($('#quizDomain')); put($('#bossDomain'));
+  $('#matchSet').innerHTML = MATCH_SETS.map((m)=>`<option value="${m.id}">${m.core} · ${m.name}</option>`).join('');
+  $('#teachToggle').checked = !!state.settings.teach;
+}
+
+/*****************
+ * Toast helper  *
+ *****************/
+let toastTimer=null; function toast(msg){
+  clearTimeout(toastTimer);
+  let t = $('#toast'); if(!t){ t=document.createElement('div'); t.id='toast'; t.style.position='fixed'; t.style.bottom='20px'; t.style.left='50%'; t.style.transform='translateX(-50%)'; t.style.background='#0b122a'; t.style.border='1px solid #2a2f58'; t.style.borderRadius='12px'; t.style.padding='10px 14px'; t.style.zIndex='99'; t.style.boxShadow='0 10px 30px rgba(0,0,0,.35)'; document.body.appendChild(t);} t.textContent=msg; t.style.opacity='1'; toastTimer=setTimeout(()=>{ t.style.opacity='0'; }, 2000);
+}
 
 /**************
  * Initialize  *
  **************/
 function init(){
-  // Mode tab click handlers
   $$('.mode-tab').forEach(btn=>btn.addEventListener('click', ()=>gotoMode(btn.dataset.mode)));
-  fillDomains(); renderObjectives(); renderAchievements(); updateHeader();
+  fillDomains(); updateHeader();
 }
 init();
 </script>
